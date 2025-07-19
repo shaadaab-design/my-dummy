@@ -106,73 +106,73 @@ st.markdown("""
 
 # Love notes data
 DEFAULT_LOVE_NOTES = [
-   "you make even the boring moments feel like actual magic hmp"
-"my heart goes all badum badum every time i see you dummy"
-"YOU’RE literally the best part of every single day ever"
-"i’m so so SOOO lucky to have you like FR how did i even get you"
-"your smile makes everything else disappear like WHO gave you permission"
-"i fall harder every day and it’s NOT FAIR stop being so cute"
-"you’re the reason i believe in those dumb fairy tale love stories now"
-"my fav place is literally just wherever YOU are hm"
-"you turn my gray sky heart into a whole rainbow and now i’m soft"
-"i choose you always ALWAYS even when you’re mean to me"
-"you’re my home my person my little EVERYTHINGGG"
-"with you it’s just… forever vibes and my chest gets all warm"
-"you make me wanna be soft and good and better like why"
-"i love the way your eyes see stuff like suddenly everything’s pretty"
-"you’re the sunshine when i wanna cry into my pillow"
-"my heart is LOCKED and you’re the only one who gets the key"
-"suddenly all love songs are about you and i HATE IT (but not really)"
-"your sleepy voice in the morning makes me go all fuzzy inside"
-"you’re my fav notification and i’d ignore the whole world for u"
-"the way you make me laugh till i’m wheezing STOPPPP"
-"you smell like home and comfort and i’m gonna sob"
-"when you scrunch your nose while thinking??? I’M GONE"
-"you’re my fav adventure i’d get lost with you every time"
-"your weird 3am thoughts make me giggle like a fool"
-"my heart does little flippy things when you look at me like that"
-"the way you get excited over tiny things makes me wanna squish u"
-"you’re the safest softest place in the entire universe HMP"
-"you hum when you’re happy and i fall in love all over again"
-"you make me believe in magic and now i’m stuck forever"
-"your dumb dad jokes shouldn’t make me laugh BUT THEY DO"
-"you’re my fav kind of chaos and i wouldn’t change a thing"
-"you somehow always know what i need and i hate itttt (no i don’t)"
-"time goes fast and slow with you and i’m just?? lost in you??"
-"your messy morning hair makes me want to bury my face in ur neck"
-"you’re literally the biggest blessing and i didn’t even see u coming"
-"you make tuesdays feel like date nights i didn’t plan but love"
-"you’re the plot twist that made everything better i swear"
-"you see the world in a way that makes me fall harder every time"
-"you make my heart feel all full and dumb and i LOVE IT"
-"i saw you dancing alone and now i’m giggling into my sleeves"
-"you’re my fav distraction and i don’t even wanna focus on anything else"
-"your goodnight texts make me feel like the safest lil thing ever"
-"you make me wanna write cheesy poetry and blush at my own words"
-"you steal my hoodies and somehow make them look cuter on u"
-"you’re my comfy place always always and forever hmp"
-"your 2am random facts are so dumb and so YOU i can’t stop smiling"
-"you make every boring day feel like a birthday party or smth"
-"you make me feel brave and soft and clingy at the same time"
-"you’re the hello that makes me melt and the goodbye that breaks me"
-"your heart is so soft it makes my chest ache and my brain go fuzzy"
-"life with you feels like a dream i never wanna wake up from"
-"you remember the tiniest things about me and i’m just like… HOW"
-"you’re the missing puzzle piece and now i’m whole or whatever"
-"your smile is illegal and your joy makes me dizzy"
-"you make me feel like i can do anything and that’s terrifying"
-"your hugs are actual therapy and i need one every five minutes"
-"you’re my fav person to just lay around and do NOTHING with"
-"you understand me better than i do and that’s wild hmp"
-"you’re the biggest adventure and i’m diving in headfirst"
-"your sleepy cuddles are too powerful i literally malfunction"
-"you make my heart speed up and calm down all at once i hate it here"
-"you believe in my dreams more than i do and now i’m crying"
-"you’re my fav love story and i never want it to end"
-"you talking at midnight is like a lullaby for my anxious little brain"
-"you make me feel like the luckiest dumb baby in the world"
-"you make me feel cute and loved and safe and i’m not okay"
-"you’re my forever and my always and YES i’m gonna be annoyingly clingy about it"
+    "you make even the boring moments feel like actual magic hmp 💗",
+    "my heart goes all badum badum every time i see you dummy 💓",
+    "YOU'RE literally the best part of every single day ever ✨",
+    "i'm so so SOOO lucky to have you like FR how did i even get you 🍀",
+    "your smile makes everything else disappear like WHO gave you permission 😊",
+    "i fall harder every day and it's NOT FAIR stop being so cute 💕",
+    "you're the reason i believe in those dumb fairy tale love stories now 📚",
+    "my fav place is literally just wherever YOU are hm 🏡",
+    "you turn my gray sky heart into a whole rainbow and now i'm soft 🌈",
+    "i choose you always ALWAYS even when you're mean to me 💍",
+    "you're my home my person my little EVERYTHINGGG 🏠",
+    "with you it's just… forever vibes and my chest gets all warm 🌟",
+    "you make me wanna be soft and good and better like why ✨",
+    "i love the way your eyes see stuff like suddenly everything's pretty 👀",
+    "you're the sunshine when i wanna cry into my pillow ☀️",
+    "my heart is LOCKED and you're the only one who gets the key 🔐",
+    "suddenly all love songs are about you and i HATE IT (but not really) 🎶",
+    "your sleepy voice in the morning makes me go all fuzzy inside 🌅",
+    "you're my fav notification and i'd ignore the whole world for u 📱",
+    "the way you make me laugh till i'm wheezing STOPPPP 😂",
+    "you smell like home and comfort and i'm gonna sob 🌸",
+    "when you scrunch your nose while thinking??? I'M GONE 🤔",
+    "you're my fav adventure i'd get lost with you every time 🗺️",
+    "your weird 3am thoughts make me giggle like a fool 🌙",
+    "my heart does little flippy things when you look at me like that 🎪",
+    "the way you get excited over tiny things makes me wanna squish u ✨",
+    "you're the safest softest place in the entire universe HMP 🕊️",
+    "you hum when you're happy and i fall in love all over again 🎵",
+    "you make me believe in magic and now i'm stuck forever 🪄",
+    "your dumb dad jokes shouldn't make me laugh BUT THEY DO 😄",
+    "you're my fav kind of chaos and i wouldn't change a thing 😈",
+    "you somehow always know what i need and i hate itttt (no i don't) 💝",
+    "time goes fast and slow with you and i'm just?? lost in you?? ⏰",
+    "your messy morning hair makes me want to bury my face in ur neck 💁‍♀️",
+    "you're literally the biggest blessing and i didn't even see u coming 🙏",
+    "you make tuesdays feel like date nights i didn't plan but love 📅",
+    "you're the plot twist that made everything better i swear 📖",
+    "you see the world in a way that makes me fall harder every time 🔮",
+    "you make my heart feel all full and dumb and i LOVE IT 💓",
+    "i saw you dancing alone and now i'm giggling into my sleeves 💃",
+    "you're my fav distraction and i don't even wanna focus on anything else 📚",
+    "your goodnight texts make me feel like the safest lil thing ever 🌙",
+    "you make me wanna write cheesy poetry and blush at my own words 📝",
+    "you steal my hoodies and somehow make them look cuter on u 👕",
+    "you're my comfy place always always and forever hmp 🏖️",
+    "your 2am random facts are so dumb and so YOU i can't stop smiling 🧠",
+    "you make every boring day feel like a birthday party or smth 🎉",
+    "you make me feel brave and soft and clingy at the same time 🦁",
+    "you're the hello that makes me melt and the goodbye that breaks me 👋",
+    "your heart is so soft it makes my chest ache and my brain go fuzzy 💖",
+    "life with you feels like a dream i never wanna wake up from 💭",
+    "you remember the tiniest things about me and i'm just like… HOW 🧩",
+    "you're the missing puzzle piece and now i'm whole or whatever 🧩",
+    "your smile is illegal and your joy makes me dizzy 🌻",
+    "you make me feel like i can do anything and that's terrifying 🌍",
+    "your hugs are actual therapy and i need one every five minutes 🤗",
+    "you're my fav person to just lay around and do NOTHING with 🛋️",
+    "you understand me better than i do and that's wild hmp 💫",
+    "you're the biggest adventure and i'm diving in headfirst 🎢",
+    "your sleepy cuddles are too powerful i literally malfunction 😴",
+    "you make my heart speed up and calm down all at once i hate it here 💗",
+    "you believe in my dreams more than i do and now i'm crying 🌟",
+    "you're my fav love story and i never want it to end 💕",
+    "you talking at midnight is like a lullaby for my anxious little brain 🌙",
+    "you make me feel like the luckiest dumb baby in the world 🍀",
+    "you make me feel cute and loved and safe and i'm not okay 👸",
+    "you're my forever and my always and YES i'm gonna be annoyingly clingy about it 💍"
 ]
 
 # Initialize session state
