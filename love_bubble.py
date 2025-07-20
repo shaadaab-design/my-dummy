@@ -260,3 +260,113 @@ st.markdown(
     'Made with 💕 for someone special</p>', 
     unsafe_allow_html=True
 )
+import streamlit.components.v1 as components
+
+# 🎮 Heart Catcher Game (add this at the END)
+st.markdown("---")
+st.markdown("### 💘 Mini Game: Heart Catcher 💘")
+st.markdown("Choose a player and catch as many hearts as you can! Rare golden hearts give more points 💛")
+
+# Embed the game using HTML and JS
+components.html("""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  canvas { 
+    border: 4px solid #ffb3d9; 
+    background: linear-gradient(#ffeef8, #ffd4e8);
+    border-radius: 15px;
+  }
+  #controls {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  select {
+    font-size: 16px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 2px solid #ffb3d9;
+  }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <label for="player">Choose your player: </label>
+  <select id="player">
+    <option value="shaady">Shaady 💙</option>
+    <option value="shaary">Shaary 💖</option>
+  </select>
+</div>
+
+<canvas id="gameCanvas" width="350" height="500"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const basket = { x: 150, y: 450, w: 50, h: 30, speed: 5 };
+const hearts = [];
+let score = 0;
+let rareHeartChance = 0.05; // 5% chance for golden heart
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") basket.x -= basket.speed;
+  if (e.key === "ArrowRight") basket.x += basket.speed;
+});
+
+function drawBasket() {
+  const player = document.getElementById("player").value;
+  ctx.fillStyle = player === "shaary" ? "#d63384" : "#3498db";
+  ctx.fillRect(basket.x, basket.y, basket.w, basket.h);
+}
+
+function drawHeart(heart) {
+  ctx.font = "20px serif";
+  ctx.fillText(heart.isRare ? "💛" : "💗", heart.x, heart.y);
+}
+
+function spawnHeart() {
+  const x = Math.random() * (canvas.width - 20);
+  const isRare = Math.random() < rareHeartChance;
+  hearts.push({ x, y: 0, isRare });
+}
+
+function updateHearts() {
+  for (let i = hearts.length - 1; i >= 0; i--) {
+    hearts[i].y += 2;
+    if (
+      hearts[i].y + 20 > basket.y &&
+      hearts[i].x > basket.x &&
+      hearts[i].x < basket.x + basket.w
+    ) {
+      score += hearts[i].isRare ? 10 : 1;
+      hearts.splice(i, 1);
+    } else if (hearts[i].y > canvas.height) {
+      hearts.splice(i, 1);
+    }
+  }
+}
+
+function drawScore() {
+  ctx.fillStyle = "#8e44ad";
+  ctx.font = "20px sans-serif";
+  ctx.fillText("Score: " + score, 10, 25);
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (Math.random() < 0.05) spawnHeart();
+  updateHearts();
+  drawBasket();
+  hearts.forEach(drawHeart);
+  drawScore();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
+""", height=580)
