@@ -459,11 +459,11 @@ gameLoop();
 </html>
 """, height=640)
 st.markdown("---")
-st.markdown("### 💘 Dreamy Rhythm 💘")
-st.markdown("A soft lo-fi rhythm game where you tap floating tiles to the beat 🎼✨")
+st.markdown("### 🎹 Piano Tiles - Love Edition 🎹")
+st.markdown("Classic piano tiles with your favorite song! 💕")
 
-# YouTube URL input for the rhythm game
-youtube_url = st.text_input("🎵 Paste YouTube URL (audio only):", placeholder="https://www.youtube.com/watch?v=...")
+# YouTube URL input
+youtube_url = st.text_input("🎵 YouTube URL:", value="https://youtu.be/d1BzzJSNbDU?si=Gqvo5pPL4orJtE0W", placeholder="https://youtu.be/...")
 
 components.html(f"""
 <!DOCTYPE html>
@@ -480,7 +480,7 @@ components.html(f"""
   #gameContainer {{
     position: relative;
     width: 400px;
-    height: 500px;
+    height: 600px;
     margin: 0 auto;
     background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,179,217,0.2) 100%);
     border: 3px solid #ffb3d9;
@@ -493,75 +493,62 @@ components.html(f"""
     position: absolute;
     width: 25%;
     height: 100%;
-    border-right: 2px solid rgba(255,179,217,0.3);
-    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.05) 100%);
+    border-right: 2px solid rgba(255,179,217,0.5);
+    background: rgba(255,255,255,0.1);
   }}
   
-  .lane:last-child {{ border-right: none; }}
+  .lane:nth-child(1) {{ left: 0%; background: rgba(255,182,193,0.1); }}
+  .lane:nth-child(2) {{ left: 25%; background: rgba(255,160,180,0.1); }}
+  .lane:nth-child(3) {{ left: 50%; background: rgba(255,140,170,0.1); }}
+  .lane:nth-child(4) {{ left: 75%; border-right: none; background: rgba(255,120,160,0.1); }}
   
   .tile {{
     position: absolute;
-    width: 90%;
-    height: 60px;
-    left: 5%;
-    background: linear-gradient(145deg, #ff6b9d, #d63384);
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(214, 51, 132, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 20px;
-    transition: all 0.2s ease;
+    width: 98%;
+    left: 1%;
+    height: 80px;
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     cursor: pointer;
-  }}
-  
-  .tile.long-hold {{
-    height: 120px;
-    background: linear-gradient(145deg, #ff9a9e, #fecfef);
-    border: 3px solid #d63384;
+    transition: all 0.1s ease;
+    border: 2px solid #34495e;
   }}
   
   .tile:hover {{
-    transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(214, 51, 132, 0.6);
+    background: linear-gradient(145deg, #3a4a5c, #4a5a6e);
   }}
   
   .tile.hit {{
-    transform: scale(1.2);
-    background: linear-gradient(145deg, #ffd700, #ffb347);
-    animation: sparkle 0.3s ease-out;
+    background: linear-gradient(145deg, #ff6b9d, #d63384) !important;
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(214, 51, 132, 0.5);
   }}
   
-  @keyframes sparkle {{
-    0% {{ transform: scale(1.2) rotate(0deg); }}
-    50% {{ transform: scale(1.4) rotate(180deg); }}
-    100% {{ transform: scale(1.2) rotate(360deg); }}
+  .tile.missed {{
+    background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
+    animation: shake 0.5s ease-in-out;
   }}
   
-  .floating-heart {{
-    position: absolute;
-    font-size: 20px;
-    opacity: 0.6;
-    animation: float 4s ease-in-out infinite;
-    pointer-events: none;
-  }}
-  
-  @keyframes float {{
-    0%, 100% {{ transform: translateY(0px) rotate(0deg); }}
-    50% {{ transform: translateY(-20px) rotate(180deg); }}
+  @keyframes shake {{
+    0%, 100% {{ transform: translateX(0); }}
+    25% {{ transform: translateX(-5px); }}
+    75% {{ transform: translateX(5px); }}
   }}
   
   #ui {{
     position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
+    top: 15px;
+    left: 15px;
+    right: 15px;
     display: flex;
     justify-content: space-between;
     color: #8e44ad;
     font-weight: bold;
     z-index: 100;
+    background: rgba(255,255,255,0.8);
+    padding: 10px;
+    border-radius: 10px;
   }}
   
   #message {{
@@ -572,142 +559,126 @@ components.html(f"""
     text-align: center;
     color: #d63384;
     font-weight: bold;
-    font-size: 14px;
-    min-height: 40px;
-    background: rgba(255,255,255,0.8);
+    font-size: 16px;
+    min-height: 50px;
+    background: rgba(255,255,255,0.9);
     border-radius: 15px;
-    padding: 10px;
+    padding: 15px;
     box-shadow: 0 5px 15px rgba(214, 51, 132, 0.2);
   }}
   
-  #retryBtn {{
+  #startBtn, #retryBtn {{
     background: linear-gradient(45deg, #ff6b9d, #d63384);
     border: none;
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
-    padding: 10px 20px;
+    padding: 12px 25px;
     border-radius: 25px;
     margin-top: 10px;
     cursor: pointer;
-    display: none;
+    transition: all 0.3s ease;
   }}
   
-  .cracked-heart {{
+  #startBtn:hover, #retryBtn:hover {{
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(214, 51, 132, 0.4);
+  }}
+  
+  .floating-heart {{
     position: absolute;
-    font-size: 30px;
-    color: #ff4757;
-    animation: crack 1s ease-out;
+    font-size: 20px;
+    opacity: 0.4;
+    animation: floatUp 3s ease-out infinite;
+    pointer-events: none;
+    z-index: 50;
   }}
   
-  @keyframes crack {{
-    0% {{ transform: scale(1) rotate(0deg); opacity: 1; }}
-    50% {{ transform: scale(1.2) rotate(-10deg); }}
-    100% {{ transform: scale(0.8) rotate(10deg); opacity: 0; }}
+  @keyframes floatUp {{
+    0% {{ transform: translateY(0px) scale(1); opacity: 0.6; }}
+    100% {{ transform: translateY(-100px) scale(0.5); opacity: 0; }}
   }}
 </style>
 </head>
 <body>
 <div id="gameContainer">
-  <div class="lane" style="left: 0%;"></div>
-  <div class="lane" style="left: 25%;"></div>
-  <div class="lane" style="left: 50%;"></div>
-  <div class="lane" style="left: 75%;"></div>
+  <div class="lane"></div>
+  <div class="lane"></div>
+  <div class="lane"></div>
+  <div class="lane"></div>
   
   <div id="ui">
-    <div>✨ <span id="score">0</span></div>
-    <div>💗 <span id="hearts">3</span></div>
-    <div>🎵 <span id="streak">0</span></div>
+    <div>🎼 Score: <span id="score">0</span></div>
+    <div>💗 Lives: <span id="lives">3</span></div>
+    <div>🎵 Combo: <span id="combo">0</span></div>
   </div>
   
-  <div id="message">Ready to feel the rhythm? 💕</div>
-  <button id="retryBtn">🔁 Wanna retry?</button>
+  <div id="message">
+    Click "Start" to begin playing! 💕<br>
+    <button id="startBtn">🎵 Start Game</button>
+    <button id="retryBtn" style="display:none;">🔁 Try Again</button>
+  </div>
 </div>
 
 <script>
 const gameContainer = document.getElementById('gameContainer');
 const scoreEl = document.getElementById('score');
-const heartsEl = document.getElementById('hearts');
-const streakEl = document.getElementById('streak');
+const livesEl = document.getElementById('lives');
+const comboEl = document.getElementById('combo');
 const messageEl = document.getElementById('message');
+const startBtn = document.getElementById('startBtn');
 const retryBtn = document.getElementById('retryBtn');
 
 let score = 0;
-let hearts = 3;
-let streak = 0;
-let gameActive = true;
+let lives = 3;
+let combo = 0;
+let gameActive = false;
 let tiles = [];
-let floatingHearts = [];
+let gameSpeed = 2;
+let spawnRate = 1000; // milliseconds
 
-// Sample beat map for "Our Start" (you can expand this)
-const beatMap = [
-  {{time: 1000, lane: 0, type: 'tap'}},
-  {{time: 1500, lane: 2, type: 'tap'}},
-  {{time: 2000, lane: 1, type: 'hold', duration: 1000}},
-  {{time: 3200, lane: 3, type: 'tap'}},
-  {{time: 3700, lane: 0, type: 'tap'}},
-  {{time: 4200, lane: 2, type: 'tap'}},
-  {{time: 5000, lane: 1, type: 'hold', duration: 800}},
-  {{time: 6000, lane: 3, type: 'tap'}},
-  {{time: 6500, lane: 0, type: 'tap'}},
-  {{time: 7000, lane: 2, type: 'tap'}},
-  {{time: 7500, lane: 1, type: 'tap'}},
-  {{time: 8000, lane: 3, type: 'hold', duration: 1200}},
-];
+// Sample beat pattern (you can customize this for your song)
+const beatPattern = [0, 1, 2, 3, 1, 0, 2, 1, 3, 0, 1, 2, 0, 3, 1, 2, 3, 0, 1, 2];
+let patternIndex = 0;
 
-let gameStartTime = Date.now();
-let currentBeatIndex = 0;
-
-const compliments = [
-  "Look at you, all smooth and synced. My lil maestro dummy 🎼💗",
-  "Ooh someone's got rhythm! You're making my heart flutter 💕",
-  "Perfect timing baby! You're in sync with my heartbeat ✨",
-  "Awh you're so good at this! My talented little love 🥹💗",
-  "Keep going! You're making beautiful music 🎵💕"
-];
-
-function createFloatingHeart() {{
+function createFloatingHeart(x, y) {{
   const heart = document.createElement('div');
   heart.className = 'floating-heart';
-  heart.innerHTML = ['💗', '💕', '💖', '💝'][Math.floor(Math.random() * 4)];
-  heart.style.left = Math.random() * 350 + 'px';
-  heart.style.top = Math.random() * 450 + 'px';
-  heart.style.animationDelay = Math.random() * 2 + 's';
+  heart.innerHTML = ['💗', '💕', '✨'][Math.floor(Math.random() * 3)];
+  heart.style.left = x + 'px';
+  heart.style.top = y + 'px';
   gameContainer.appendChild(heart);
   
-  setTimeout(() => heart.remove(), 4000);
+  setTimeout(() => heart.remove(), 3000);
 }}
 
-function createTile(beat) {{
+function createTile(laneIndex) {{
   const tile = document.createElement('div');
-  tile.className = beat.type === 'hold' ? 'tile long-hold' : 'tile';
-  tile.style.left = (beat.lane * 25) + '%';
-  tile.style.top = '-70px';
-  tile.innerHTML = beat.type === 'hold' ? '💖' : '💗';
-  
-  tile.dataset.lane = beat.lane;
-  tile.dataset.type = beat.type;
-  tile.dataset.duration = beat.duration || 0;
-  tile.dataset.startTime = Date.now();
+  tile.className = 'tile';
+  tile.style.left = (laneIndex * 25) + '%';
+  tile.style.top = '-80px';
+  tile.dataset.lane = laneIndex;
+  tile.dataset.hit = 'false';
   
   gameContainer.appendChild(tile);
   tiles.push(tile);
   
   // Animate tile falling
-  let position = -70;
+  let position = -80;
   const fallInterval = setInterval(() => {{
     if (!gameActive) {{
       clearInterval(fallInterval);
       return;
     }}
     
-    position += 3;
+    position += gameSpeed;
     tile.style.top = position + 'px';
     
-    // Check if tile reached bottom without being hit
-    if (position > 500) {{
+    // Check if tile reached bottom
+    if (position > 600) {{
       clearInterval(fallInterval);
-      if (!tile.dataset.hit) {{
+      if (tile.dataset.hit === 'false') {{
+        // Missed tile
         missedTile();
       }}
       tile.remove();
@@ -715,57 +686,79 @@ function createTile(beat) {{
     }}
   }}, 16);
   
-  // Add click handler
-  tile.addEventListener('click', () => hitTile(tile));
+  // Add click handler to the lane
+  const lanes = document.querySelectorAll('.lane');
+  lanes[laneIndex].onclick = () => hitTile(tile, laneIndex);
 }}
 
-function hitTile(tile) {{
-  if (tile.dataset.hit) return;
+function hitTile(tile, laneIndex) {{
+  if (tile.dataset.hit === 'true' || !gameActive) return;
   
-  tile.dataset.hit = 'true';
-  tile.classList.add('hit');
+  const tileRect = tile.getBoundingClientRect();
+  const containerRect = gameContainer.getBoundingClientRect();
   
-  score += 10;
-  streak++;
-  scoreEl.textContent = score;
-  streakEl.textContent = streak;
+  // Check if tile is in the hit zone (bottom 25% of screen)
+  const hitZone = containerRect.height * 0.75;
+  const tilePosition = tileRect.top - containerRect.top;
   
-  // Show compliment on good streaks
-  if (streak > 0 && streak % 5 === 0) {{
-    const compliment = compliments[Math.floor(Math.random() * compliments.length)];
-    messageEl.textContent = compliment;
-    setTimeout(() => {{
-      if (gameActive) messageEl.textContent = "Keep the rhythm flowing... 💕";
-    }}, 2000);
-  }}
-  
-  // Create sparkle effect
-  for (let i = 0; i < 3; i++) {{
-    setTimeout(() => createFloatingHeart(), i * 100);
+  if (tilePosition > hitZone && tilePosition < containerRect.height - 100) {{
+    // Good hit!
+    tile.dataset.hit = 'true';
+    tile.classList.add('hit');
+    
+    score += 10 + (combo * 2);
+    combo++;
+    scoreEl.textContent = score;
+    comboEl.textContent = combo;
+    
+    // Create floating heart effect
+    const x = (laneIndex * 100) + 50;
+    const y = tilePosition;
+    createFloatingHeart(x, y);
+    
+    // Show encouraging messages
+    if (combo === 10) {{
+      showMessage("Amazing combo! You're in the zone! 💕", 2000);
+    }} else if (combo === 25) {{
+      showMessage("Incredible! My lil piano master! 🎼✨", 2000);
+    }} else if (combo === 50) {{
+      showMessage("LEGENDARY! You're making my heart sing! 💗", 2000);
+    }}
+    
+    // Increase game speed slightly
+    if (score % 100 === 0 && gameSpeed < 4) {{
+      gameSpeed += 0.2;
+      spawnRate = Math.max(spawnRate - 50, 400);
+    }}
+  }} else {{
+    // Bad timing
+    combo = 0;
+    comboEl.textContent = combo;
+    showMessage("Off-beat! Wait for the right moment 💔", 1000);
   }}
 }}
 
 function missedTile() {{
-  hearts--;
-  heartsEl.textContent = hearts;
-  streak = 0;
-  streakEl.textContent = streak;
+  lives--;
+  combo = 0;
+  livesEl.textContent = lives;
+  comboEl.textContent = combo;
   
-  // Create cracked heart
-  const crackedHeart = document.createElement('div');
-  crackedHeart.className = 'cracked-heart';
-  crackedHeart.innerHTML = '💔';
-  crackedHeart.style.left = Math.random() * 300 + 'px';
-  crackedHeart.style.top = Math.random() * 400 + 200 + 'px';
-  gameContainer.appendChild(crackedHeart);
-  
-  setTimeout(() => crackedHeart.remove(), 1000);
-  
-  if (hearts <= 0) {{
+  if (lives <= 0) {{
     endGame();
   }} else {{
-    messageEl.textContent = "A little heart crack... but keep going! 💗";
+    showMessage("Missed a note! Focus, my love 💗", 1500);
   }}
+}}
+
+function showMessage(msg, duration = 2000) {{
+  const originalContent = messageEl.innerHTML;
+  messageEl.innerHTML = msg;
+  setTimeout(() => {{
+    if (gameActive) {{
+      messageEl.innerHTML = "Keep the rhythm! You're doing great! 💕";
+    }}
+  }}, duration);
 }}
 
 function endGame() {{
@@ -773,86 +766,93 @@ function endGame() {{
   tiles.forEach(tile => tile.remove());
   tiles = [];
   
+  let endMessage = "";
+  if (score >= 500) {{
+    endMessage = "WOW! Absolutely incredible! You're my piano virtuoso! 🎼👑💕";
+  }} else if (score >= 200) {{
+    endMessage = "Amazing performance! You made beautiful music! 🎵💗";
+  }} else if (score >= 100) {{
+    endMessage = "Good job! You're getting the hang of it! 💕";
+  }} else {{
+    endMessage = "Awh, that's okay! Practice makes perfect, my love 💗";
+  }}
+  
   messageEl.innerHTML = `
-    You broke the rhythm… and maybe my heart. Hmp. 💔<br>
-    <small>But that was our lil song... 💕</small>
+    Game Over! Final Score: ${{score}}<br>
+    ${{endMessage}}<br>
   `;
-  retryBtn.style.display = 'block';
+  retryBtn.style.display = 'inline-block';
 }}
 
 function startGame() {{
   gameActive = true;
   score = 0;
-  hearts = 3;
-  streak = 0;
-  currentBeatIndex = 0;
-  gameStartTime = Date.now();
+  lives = 3;
+  combo = 0;
+  gameSpeed = 2;
+  spawnRate = 1000;
+  patternIndex = 0;
   
   scoreEl.textContent = score;
-  heartsEl.textContent = hearts;
-  streakEl.textContent = streak;
-  messageEl.textContent = "Feel the rhythm in your heart... 💕";
+  livesEl.textContent = lives;
+  comboEl.textContent = combo;
+  messageEl.innerHTML = "Keep the rhythm! You're doing great! 💕";
+  startBtn.style.display = 'none';
   retryBtn.style.display = 'none';
   
-  // Start spawning tiles based on beat map
-  function spawnNextTile() {{
-    if (!gameActive || currentBeatIndex >= beatMap.length) return;
-    
-    const currentTime = Date.now() - gameStartTime;
-    const nextBeat = beatMap[currentBeatIndex];
-    
-    if (currentTime >= nextBeat.time) {{
-      createTile(nextBeat);
-      currentBeatIndex++;
-    }}
-    
-    if (currentBeatIndex < beatMap.length) {{
-      setTimeout(spawnNextTile, 50);
-    }} else {{
-      // End game after last tile
-      setTimeout(() => {{
-        if (gameActive) {{
-          messageEl.textContent = "Awh, that was our lil song… Wanna retry? 💕";
-          retryBtn.style.display = 'block';
-          gameActive = false;
-        }}
-      }}, 5000);
-    }}
-  }}
+  // Start spawning tiles
+  spawnTiles();
+}}
+
+function spawnTiles() {{
+  if (!gameActive) return;
   
-  spawnNextTile();
+  // Use the beat pattern to determine which lane
+  const laneIndex = beatPattern[patternIndex % beatPattern.length];
+  createTile(laneIndex);
+  patternIndex++;
+  
+  // Schedule next tile
+  setTimeout(spawnTiles, spawnRate);
 }}
 
 // Add floating hearts in background
 setInterval(() => {{
-  if (gameActive) createFloatingHeart();
-}}, 800);
+  if (gameActive) {{
+    const x = Math.random() * 350;
+    const y = Math.random() * 500 + 100;
+    createFloatingHeart(x, y);
+  }}
+}}, 2000);
 
-retryBtn.addEventListener('click', startGame);
+startBtn.addEventListener('click', startGame);
+retryBtn.addEventListener('click', () => {{
+  startGame();
+}});
 
-// Start the game
-setTimeout(startGame, 1000);
-
-// Add lane click handlers for mobile
-document.querySelectorAll('.lane').forEach((lane, index) => {{
-  lane.addEventListener('click', (e) => {{
-    const rect = lane.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    
-    // Find tile in this lane near click position
-    const nearbyTile = tiles.find(tile => {{
-      const tileRect = tile.getBoundingClientRect();
-      const laneRect = lane.getBoundingClientRect();
-      return parseInt(tile.dataset.lane) === index && 
-             Math.abs(e.clientY - (tileRect.top + tileRect.height/2)) < 50;
-    }});
-    
-    if (nearbyTile && !nearbyTile.dataset.hit) {{
-      hitTile(nearbyTile);
+// Add keyboard support
+document.addEventListener('keydown', (e) => {{
+  if (!gameActive) return;
+  
+  let laneIndex = -1;
+  switch(e.key) {{
+    case 'a': case 'A': case '1': laneIndex = 0; break;
+    case 's': case 'S': case '2': laneIndex = 1; break;
+    case 'd': case 'D': case '3': laneIndex = 2; break;
+    case 'f': case 'F': case '4': laneIndex = 3; break;
+  }}
+  
+  if (laneIndex >= 0) {{
+    // Find the lowest tile in this lane
+    const laneTiles = tiles.filter(t => parseInt(t.dataset.lane) === laneIndex && t.dataset.hit === 'false');
+    if (laneTiles.length > 0) {{
+      // Sort by position and hit the lowest one
+      laneTiles.sort((a, b) => parseInt(a.style.top) - parseInt(b.style.top));
+      hitTile(laneTiles[laneTiles.length - 1], laneIndex);
     }}
-  }});
+  }}
 }});
 </script>
 </body>
 </html>
-""", height=580)
+""", height=680)
