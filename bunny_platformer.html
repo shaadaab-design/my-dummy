@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Bunny Platformer Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, #c1f0f6, #ffe1f2);
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #fff0f6;
+      border: 3px solid #ff89c2;
+      box-shadow: 0 10px 30px rgba(255, 137, 194, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const gravity = 0.5;
+    const jumpPower = -10;
+
+    const player = {
+      x: 50,
+      y: 300,
+      width: 30,
+      height: 30,
+      color: "#ff69b4",
+      dy: 0,
+      onGround: false,
+    };
+
+    const platforms = [
+      { x: 0, y: 370, width: 600, height: 30 },   // Ground
+      { x: 120, y: 300, width: 100, height: 20 },
+      { x: 260, y: 250, width: 100, height: 20 },
+      { x: 400, y: 200, width: 100, height: 20 },
+    ];
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawPlatforms() {
+      ctx.fillStyle = "#b0e0e6";
+      platforms.forEach(p => {
+        ctx.fillRect(p.x, p.y, p.width, p.height);
+      });
+    }
+
+    function update() {
+      player.dy += gravity;
+      player.y += player.dy;
+
+      // Check collision with platforms
+      player.onGround = false;
+      platforms.forEach(p => {
+        if (
+          player.x < p.x + p.width &&
+          player.x + player.width > p.x &&
+          player.y + player.height < p.y + player.dy &&
+          player.y + player.height >= p.y
+        ) {
+          player.y = p.y - player.height;
+          player.dy = 0;
+          player.onGround = true;
+        }
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlatforms();
+      drawPlayer();
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+
+    // Controls
+    document.addEventListener("keydown", (e) => {
+      if ((e.code === "Space" || e.code === "ArrowUp") && player.onGround) {
+        player.dy = jumpPower;
+      }
+      if (e.code === "ArrowRight") {
+        player.x += 10;
+      }
+      if (e.code === "ArrowLeft") {
+        player.x -= 10;
+      }
+    });
+  </script>
+</body>
+</html>
