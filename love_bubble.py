@@ -459,5 +459,400 @@ gameLoop();
 </html>
 """, height=640)
 st.markdown("---")
-st.markdown("### 🎹 Piano Tiles Mini Game 🎹")
-components.html(open("piano_tiles_game.html").read(), height=550)
+st.markdown("### 💘 Dreamy Rhythm 💘")
+st.markdown("A soft lo-fi rhythm game where you tap floating tiles to the beat 🎼✨")
+
+# YouTube URL input for the rhythm game
+youtube_url = st.text_input("🎵 Paste YouTube URL (audio only):", placeholder="https://www.youtube.com/watch?v=...")
+
+components.html(f"""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {{ 
+    margin: 0; 
+    background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 25%, #ffd4e8 50%, #ffb3d9 100%);
+    font-family: 'Arial', sans-serif;
+    overflow: hidden;
+  }}
+  
+  #gameContainer {{
+    position: relative;
+    width: 400px;
+    height: 500px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,179,217,0.2) 100%);
+    border: 3px solid #ffb3d9;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(214, 51, 132, 0.2);
+  }}
+  
+  .lane {{
+    position: absolute;
+    width: 25%;
+    height: 100%;
+    border-right: 2px solid rgba(255,179,217,0.3);
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.05) 100%);
+  }}
+  
+  .lane:last-child {{ border-right: none; }}
+  
+  .tile {{
+    position: absolute;
+    width: 90%;
+    height: 60px;
+    left: 5%;
+    background: linear-gradient(145deg, #ff6b9d, #d63384);
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(214, 51, 132, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }}
+  
+  .tile.long-hold {{
+    height: 120px;
+    background: linear-gradient(145deg, #ff9a9e, #fecfef);
+    border: 3px solid #d63384;
+  }}
+  
+  .tile:hover {{
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(214, 51, 132, 0.6);
+  }}
+  
+  .tile.hit {{
+    transform: scale(1.2);
+    background: linear-gradient(145deg, #ffd700, #ffb347);
+    animation: sparkle 0.3s ease-out;
+  }}
+  
+  @keyframes sparkle {{
+    0% {{ transform: scale(1.2) rotate(0deg); }}
+    50% {{ transform: scale(1.4) rotate(180deg); }}
+    100% {{ transform: scale(1.2) rotate(360deg); }}
+  }}
+  
+  .floating-heart {{
+    position: absolute;
+    font-size: 20px;
+    opacity: 0.6;
+    animation: float 4s ease-in-out infinite;
+    pointer-events: none;
+  }}
+  
+  @keyframes float {{
+    0%, 100% {{ transform: translateY(0px) rotate(0deg); }}
+    50% {{ transform: translateY(-20px) rotate(180deg); }}
+  }}
+  
+  #ui {{
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    color: #8e44ad;
+    font-weight: bold;
+    z-index: 100;
+  }}
+  
+  #message {{
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    text-align: center;
+    color: #d63384;
+    font-weight: bold;
+    font-size: 14px;
+    min-height: 40px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 0 5px 15px rgba(214, 51, 132, 0.2);
+  }}
+  
+  #retryBtn {{
+    background: linear-gradient(45deg, #ff6b9d, #d63384);
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 25px;
+    margin-top: 10px;
+    cursor: pointer;
+    display: none;
+  }}
+  
+  .cracked-heart {{
+    position: absolute;
+    font-size: 30px;
+    color: #ff4757;
+    animation: crack 1s ease-out;
+  }}
+  
+  @keyframes crack {{
+    0% {{ transform: scale(1) rotate(0deg); opacity: 1; }}
+    50% {{ transform: scale(1.2) rotate(-10deg); }}
+    100% {{ transform: scale(0.8) rotate(10deg); opacity: 0; }}
+  }}
+</style>
+</head>
+<body>
+<div id="gameContainer">
+  <div class="lane" style="left: 0%;"></div>
+  <div class="lane" style="left: 25%;"></div>
+  <div class="lane" style="left: 50%;"></div>
+  <div class="lane" style="left: 75%;"></div>
+  
+  <div id="ui">
+    <div>✨ <span id="score">0</span></div>
+    <div>💗 <span id="hearts">3</span></div>
+    <div>🎵 <span id="streak">0</span></div>
+  </div>
+  
+  <div id="message">Ready to feel the rhythm? 💕</div>
+  <button id="retryBtn">🔁 Wanna retry?</button>
+</div>
+
+<script>
+const gameContainer = document.getElementById('gameContainer');
+const scoreEl = document.getElementById('score');
+const heartsEl = document.getElementById('hearts');
+const streakEl = document.getElementById('streak');
+const messageEl = document.getElementById('message');
+const retryBtn = document.getElementById('retryBtn');
+
+let score = 0;
+let hearts = 3;
+let streak = 0;
+let gameActive = true;
+let tiles = [];
+let floatingHearts = [];
+
+// Sample beat map for "Our Start" (you can expand this)
+const beatMap = [
+  {{time: 1000, lane: 0, type: 'tap'}},
+  {{time: 1500, lane: 2, type: 'tap'}},
+  {{time: 2000, lane: 1, type: 'hold', duration: 1000}},
+  {{time: 3200, lane: 3, type: 'tap'}},
+  {{time: 3700, lane: 0, type: 'tap'}},
+  {{time: 4200, lane: 2, type: 'tap'}},
+  {{time: 5000, lane: 1, type: 'hold', duration: 800}},
+  {{time: 6000, lane: 3, type: 'tap'}},
+  {{time: 6500, lane: 0, type: 'tap'}},
+  {{time: 7000, lane: 2, type: 'tap'}},
+  {{time: 7500, lane: 1, type: 'tap'}},
+  {{time: 8000, lane: 3, type: 'hold', duration: 1200}},
+];
+
+let gameStartTime = Date.now();
+let currentBeatIndex = 0;
+
+const compliments = [
+  "Look at you, all smooth and synced. My lil maestro dummy 🎼💗",
+  "Ooh someone's got rhythm! You're making my heart flutter 💕",
+  "Perfect timing baby! You're in sync with my heartbeat ✨",
+  "Awh you're so good at this! My talented little love 🥹💗",
+  "Keep going! You're making beautiful music 🎵💕"
+];
+
+function createFloatingHeart() {{
+  const heart = document.createElement('div');
+  heart.className = 'floating-heart';
+  heart.innerHTML = ['💗', '💕', '💖', '💝'][Math.floor(Math.random() * 4)];
+  heart.style.left = Math.random() * 350 + 'px';
+  heart.style.top = Math.random() * 450 + 'px';
+  heart.style.animationDelay = Math.random() * 2 + 's';
+  gameContainer.appendChild(heart);
+  
+  setTimeout(() => heart.remove(), 4000);
+}}
+
+function createTile(beat) {{
+  const tile = document.createElement('div');
+  tile.className = beat.type === 'hold' ? 'tile long-hold' : 'tile';
+  tile.style.left = (beat.lane * 25) + '%';
+  tile.style.top = '-70px';
+  tile.innerHTML = beat.type === 'hold' ? '💖' : '💗';
+  
+  tile.dataset.lane = beat.lane;
+  tile.dataset.type = beat.type;
+  tile.dataset.duration = beat.duration || 0;
+  tile.dataset.startTime = Date.now();
+  
+  gameContainer.appendChild(tile);
+  tiles.push(tile);
+  
+  // Animate tile falling
+  let position = -70;
+  const fallInterval = setInterval(() => {{
+    if (!gameActive) {{
+      clearInterval(fallInterval);
+      return;
+    }}
+    
+    position += 3;
+    tile.style.top = position + 'px';
+    
+    // Check if tile reached bottom without being hit
+    if (position > 500) {{
+      clearInterval(fallInterval);
+      if (!tile.dataset.hit) {{
+        missedTile();
+      }}
+      tile.remove();
+      tiles = tiles.filter(t => t !== tile);
+    }}
+  }}, 16);
+  
+  // Add click handler
+  tile.addEventListener('click', () => hitTile(tile));
+}}
+
+function hitTile(tile) {{
+  if (tile.dataset.hit) return;
+  
+  tile.dataset.hit = 'true';
+  tile.classList.add('hit');
+  
+  score += 10;
+  streak++;
+  scoreEl.textContent = score;
+  streakEl.textContent = streak;
+  
+  // Show compliment on good streaks
+  if (streak > 0 && streak % 5 === 0) {{
+    const compliment = compliments[Math.floor(Math.random() * compliments.length)];
+    messageEl.textContent = compliment;
+    setTimeout(() => {{
+      if (gameActive) messageEl.textContent = "Keep the rhythm flowing... 💕";
+    }}, 2000);
+  }}
+  
+  // Create sparkle effect
+  for (let i = 0; i < 3; i++) {{
+    setTimeout(() => createFloatingHeart(), i * 100);
+  }}
+}}
+
+function missedTile() {{
+  hearts--;
+  heartsEl.textContent = hearts;
+  streak = 0;
+  streakEl.textContent = streak;
+  
+  // Create cracked heart
+  const crackedHeart = document.createElement('div');
+  crackedHeart.className = 'cracked-heart';
+  crackedHeart.innerHTML = '💔';
+  crackedHeart.style.left = Math.random() * 300 + 'px';
+  crackedHeart.style.top = Math.random() * 400 + 200 + 'px';
+  gameContainer.appendChild(crackedHeart);
+  
+  setTimeout(() => crackedHeart.remove(), 1000);
+  
+  if (hearts <= 0) {{
+    endGame();
+  }} else {{
+    messageEl.textContent = "A little heart crack... but keep going! 💗";
+  }}
+}}
+
+function endGame() {{
+  gameActive = false;
+  tiles.forEach(tile => tile.remove());
+  tiles = [];
+  
+  messageEl.innerHTML = `
+    You broke the rhythm… and maybe my heart. Hmp. 💔<br>
+    <small>But that was our lil song... 💕</small>
+  `;
+  retryBtn.style.display = 'block';
+}}
+
+function startGame() {{
+  gameActive = true;
+  score = 0;
+  hearts = 3;
+  streak = 0;
+  currentBeatIndex = 0;
+  gameStartTime = Date.now();
+  
+  scoreEl.textContent = score;
+  heartsEl.textContent = hearts;
+  streakEl.textContent = streak;
+  messageEl.textContent = "Feel the rhythm in your heart... 💕";
+  retryBtn.style.display = 'none';
+  
+  // Start spawning tiles based on beat map
+  function spawnNextTile() {{
+    if (!gameActive || currentBeatIndex >= beatMap.length) return;
+    
+    const currentTime = Date.now() - gameStartTime;
+    const nextBeat = beatMap[currentBeatIndex];
+    
+    if (currentTime >= nextBeat.time) {{
+      createTile(nextBeat);
+      currentBeatIndex++;
+    }}
+    
+    if (currentBeatIndex < beatMap.length) {{
+      setTimeout(spawnNextTile, 50);
+    }} else {{
+      // End game after last tile
+      setTimeout(() => {{
+        if (gameActive) {{
+          messageEl.textContent = "Awh, that was our lil song… Wanna retry? 💕";
+          retryBtn.style.display = 'block';
+          gameActive = false;
+        }}
+      }}, 5000);
+    }}
+  }}
+  
+  spawnNextTile();
+}}
+
+// Add floating hearts in background
+setInterval(() => {{
+  if (gameActive) createFloatingHeart();
+}}, 800);
+
+retryBtn.addEventListener('click', startGame);
+
+// Start the game
+setTimeout(startGame, 1000);
+
+// Add lane click handlers for mobile
+document.querySelectorAll('.lane').forEach((lane, index) => {{
+  lane.addEventListener('click', (e) => {{
+    const rect = lane.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    
+    // Find tile in this lane near click position
+    const nearbyTile = tiles.find(tile => {{
+      const tileRect = tile.getBoundingClientRect();
+      const laneRect = lane.getBoundingClientRect();
+      return parseInt(tile.dataset.lane) === index && 
+             Math.abs(e.clientY - (tileRect.top + tileRect.height/2)) < 50;
+    }});
+    
+    if (nearbyTile && !nearbyTile.dataset.hit) {{
+      hitTile(nearbyTile);
+    }}
+  }});
+}});
+</script>
+</body>
+</html>
+""", height=580)
