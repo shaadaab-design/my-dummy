@@ -264,7 +264,7 @@ import streamlit.components.v1 as components
 
 st.markdown("---")
 st.markdown("### ✂️ Heart Slicer Mini Game ✂️")
-st.markdown("Slice the falling hearts—but don't slice the beating ones or... 💥💀")
+st.markdown("Slice the falling hearts—but don't slice the beating ones or... DEAD HA")
 
 components.html("""
 <!DOCTYPE html>
