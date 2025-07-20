@@ -458,3 +458,6 @@ gameLoop();
 </body>
 </html>
 """, height=640)
+st.markdown("---")
+st.markdown("### 🎹 Piano Tiles Mini Game 🎹")
+components.html(open("piano_tiles_game.html").read(), height=550)
