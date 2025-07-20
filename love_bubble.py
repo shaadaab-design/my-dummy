@@ -310,19 +310,21 @@ components.html("""
 <script>
 const canvas = document.getElementById("sliceCanvas");
 const ctx = canvas.getContext("2d");
+
 let hearts = [];
 let gameOver = false;
 let score = 0;
 let frameCount = 0;
 const SPAWN_INTERVAL = 60;
+const HEART_OPTIONS = ["💗", "💚", "💙", "💛", "🖤", "💜", "🤍", "🧡"];
 
 const messageBox = document.getElementById("message");
 const retryBtn = document.getElementById("retryBtn");
 
 function spawnHeart() {
   const x = Math.random() * (canvas.width - 40);
-  const isBomb = Math.random() < 0.15;
-  const emoji = isBomb ? "💓" : "💗";
+  const emoji = HEART_OPTIONS[Math.floor(Math.random() * HEART_OPTIONS.length)];
+  const isBomb = Math.random() < 0.2; // 20% chance it's a bomb, even if it looks cute
   hearts.push({
     x: x,
     y: -40,
@@ -336,9 +338,9 @@ function spawnHeart() {
 }
 
 function drawHearts() {
-  ctx.font = "32px serif";
   hearts.forEach(h => {
     if (h.isBomb) {
+      // Pulsing animation
       if (h.scaleDirection === 1) {
         h.size += 0.2;
         if (h.size > h.baseSize + 3) h.scaleDirection = -1;
@@ -456,4 +458,3 @@ gameLoop();
 </body>
 </html>
 """, height=640)
-
