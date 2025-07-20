@@ -289,15 +289,19 @@ const ctx = canvas.getContext("2d");
 let hearts = [];
 let gameOver = false;
 let score = 0;
+let frameCount = 0;
+const SPAWN_INTERVAL = 60; // frames (approx 1 heart per second at 60 FPS)
 
 function spawnHeart() {
   const x = Math.random() * (canvas.width - 40);
-  const isBomb = Math.random() < 0.15; // 15% chance it's a bomb
+  const isBomb = Math.random() < 0.15;
   const emoji = isBomb ? "💓" : "💗";
   hearts.push({
     x: x,
     y: -40,
+    baseSize: 32,
     size: 32,
+    scaleDirection: 1,
     emoji: emoji,
     isBomb: isBomb,
     sliced: false
@@ -307,6 +311,19 @@ function spawnHeart() {
 function drawHearts() {
   ctx.font = "32px serif";
   hearts.forEach(h => {
+    if (h.isBomb) {
+      // Make it pulse like a beating heart
+      if (h.scaleDirection === 1) {
+        h.size += 0.2;
+        if (h.size > h.baseSize + 3) h.scaleDirection = -1;
+      } else {
+        h.size -= 0.2;
+        if (h.size < h.baseSize - 2) h.scaleDirection = 1;
+      }
+    } else {
+      h.size = h.baseSize;
+    }
+    ctx.font = `${h.size}px serif`;
     ctx.fillText(h.emoji, h.x, h.y);
   });
 }
@@ -325,7 +342,7 @@ function checkSlice(x, y) {
     const h = hearts[i];
     if (!h.sliced &&
         x >= h.x && x <= h.x + h.size &&
-        y >= h.y && y <= h.y + h.size) {
+        y >= h.y - h.size && y <= h.y) {
       h.sliced = true;
       if (h.isBomb) {
         gameOver = true;
@@ -367,10 +384,11 @@ function drawScore() {
 function gameLoop() {
   if (gameOver) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (Math.random() < 0.05) spawnHeart();
+  if (frameCount % SPAWN_INTERVAL === 0) spawnHeart();
   updateHearts();
   drawHearts();
   drawScore();
+  frameCount++;
   requestAnimationFrame(gameLoop);
 }
 
