@@ -262,7 +262,6 @@ st.markdown(
 )
 import streamlit.components.v1 as components
 
-# 💘 New Slice-the-Heart Game (Fruit Ninja-style)
 st.markdown("---")
 st.markdown("### ✂️ Heart Slicer Mini Game ✂️")
 st.markdown("Slice the falling hearts—but don't slice the beating ones or... 💥💀")
@@ -278,15 +277,10 @@ components.html("""
     border-radius: 15px;
     touch-action: none;
   }
-  .game-container {
-    text-align: center;
-  }
 </style>
 </head>
 <body>
-<div class="game-container">
 <canvas id="sliceCanvas" width="350" height="500"></canvas>
-</div>
 
 <script>
 const canvas = document.getElementById("sliceCanvas");
@@ -296,34 +290,30 @@ let hearts = [];
 let gameOver = false;
 let score = 0;
 
-// Load emojis as images
-const regularHeart = new Image();
-regularHeart.src = "https://twemoji.maxcdn.com/v/latest/72x72/1f497.png"; // 💗
-const bombHeart = new Image();
-bombHeart.src = "https://twemoji.maxcdn.com/v/latest/72x72/1f493.png"; // 💓 (acts as bomb)
-
 function spawnHeart() {
-  const x = Math.random() * (canvas.width - 60);
+  const x = Math.random() * (canvas.width - 40);
   const isBomb = Math.random() < 0.15; // 15% chance it's a bomb
+  const emoji = isBomb ? "💓" : "💗";
   hearts.push({
     x: x,
-    y: -60,
-    size: 60,
+    y: -40,
+    size: 32,
+    emoji: emoji,
     isBomb: isBomb,
     sliced: false
   });
 }
 
 function drawHearts() {
+  ctx.font = "32px serif";
   hearts.forEach(h => {
-    const img = h.isBomb ? bombHeart : regularHeart;
-    ctx.drawImage(img, h.x, h.y, h.size, h.size);
+    ctx.fillText(h.emoji, h.x, h.y);
   });
 }
 
 function updateHearts() {
   for (let i = hearts.length - 1; i >= 0; i--) {
-    hearts[i].y += 3;
+    hearts[i].y += 2.5;
     if (hearts[i].y > canvas.height) {
       hearts.splice(i, 1);
     }
@@ -370,7 +360,7 @@ canvas.addEventListener("touchmove", (e) => {
 
 function drawScore() {
   ctx.fillStyle = "#8e44ad";
-  ctx.font = "20px sans-serif";
+  ctx.font = "18px sans-serif";
   ctx.fillText("Score: " + score, 10, 25);
 }
 
@@ -388,5 +378,6 @@ gameLoop();
 </script>
 </body>
 </html>
-""", height=580)
+""", height=550)
+
 
