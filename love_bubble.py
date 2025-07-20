@@ -277,20 +277,47 @@ components.html("""
     border-radius: 15px;
     touch-action: none;
   }
+  #message {
+    text-align: center;
+    font-size: 16px;
+    color: #d63384;
+    font-weight: bold;
+    margin-top: 10px;
+    min-height: 30px;
+  }
+  #retryBtn {
+    display: none;
+    background: linear-gradient(45deg, #ff6b9d, #d63384);
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 25px;
+    margin: 10px auto;
+    display: block;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
-<canvas id="sliceCanvas" width="350" height="500"></canvas>
+<div style="text-align:center;">
+  <canvas id="sliceCanvas" width="350" height="500"></canvas>
+  <div id="message"></div>
+  <button id="retryBtn">🔁 Retry</button>
+</div>
 
 <script>
 const canvas = document.getElementById("sliceCanvas");
 const ctx = canvas.getContext("2d");
-
 let hearts = [];
 let gameOver = false;
 let score = 0;
 let frameCount = 0;
-const SPAWN_INTERVAL = 60; // frames (approx 1 heart per second at 60 FPS)
+const SPAWN_INTERVAL = 60;
+
+const messageBox = document.getElementById("message");
+const retryBtn = document.getElementById("retryBtn");
 
 function spawnHeart() {
   const x = Math.random() * (canvas.width - 40);
@@ -312,7 +339,6 @@ function drawHearts() {
   ctx.font = "32px serif";
   hearts.forEach(h => {
     if (h.isBomb) {
-      // Make it pulse like a beating heart
       if (h.scaleDirection === 1) {
         h.size += 0.2;
         if (h.size > h.baseSize + 3) h.scaleDirection = -1;
@@ -337,6 +363,27 @@ function updateHearts() {
   }
 }
 
+function drawSliceMark(x, y) {
+  ctx.strokeStyle = "#d63384";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x - 10, y - 10);
+  ctx.lineTo(x + 10, y + 10);
+  ctx.moveTo(x + 10, y - 10);
+  ctx.lineTo(x - 10, y + 10);
+  ctx.stroke();
+}
+
+function showMessage(msg, color="#d63384") {
+  messageBox.style.color = color;
+  messageBox.innerText = msg;
+}
+
+function endGame() {
+  gameOver = true;
+  retryBtn.style.display = "block";
+}
+
 function checkSlice(x, y) {
   for (let i = 0; i < hearts.length; i++) {
     const h = hearts[i];
@@ -344,10 +391,12 @@ function checkSlice(x, y) {
         x >= h.x && x <= h.x + h.size &&
         y >= h.y - h.size && y <= h.y) {
       h.sliced = true;
+      drawSliceMark(x, y);
       if (h.isBomb) {
-        gameOver = true;
-        alert("💥 BOOM! You sliced a beating heart! Game Over.");
+        showMessage("WAAAWWW SO U HATE ME HUH BREAKING MY HEART IC IC HMP GAME OVER 💥💔", "#ff0033");
+        endGame();
       } else {
+        showMessage("AWH LOOK AT MY BABY DUMMY SO ADORBALE AN AMAZING 💕🥹");
         score += 1;
       }
       hearts.splice(i, 1);
@@ -375,6 +424,16 @@ canvas.addEventListener("touchmove", (e) => {
   }
 }, { passive: false });
 
+retryBtn.onclick = () => {
+  gameOver = false;
+  score = 0;
+  frameCount = 0;
+  hearts = [];
+  messageBox.innerText = "";
+  retryBtn.style.display = "none";
+  gameLoop();
+};
+
 function drawScore() {
   ctx.fillStyle = "#8e44ad";
   ctx.font = "18px sans-serif";
@@ -396,6 +455,5 @@ gameLoop();
 </script>
 </body>
 </html>
-""", height=550)
-
+""", height=640)
 
