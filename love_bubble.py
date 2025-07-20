@@ -262,91 +262,111 @@ st.markdown(
 )
 import streamlit.components.v1 as components
 
-# 🎮 Heart Catcher Game (add this at the END)
+# 💘 New Slice-the-Heart Game (Fruit Ninja-style)
 st.markdown("---")
-st.markdown("### 💘 Mini Game: Heart Catcher 💘")
-st.markdown("Choose a player and catch as many hearts as you can! Rare golden hearts give more points 💛")
+st.markdown("### ✂️ Heart Slicer Mini Game ✂️")
+st.markdown("Slice the falling hearts—but don't slice the beating ones or... 💥💀")
 
-# Embed the game using HTML and JS
 components.html("""
 <!DOCTYPE html>
 <html>
 <head>
 <style>
-  canvas { 
-    border: 4px solid #ffb3d9; 
-    background: linear-gradient(#ffeef8, #ffd4e8);
+  canvas {
+    border: 4px solid #ffb3d9;
+    background: linear-gradient(to bottom, #ffeef8, #ffd4e8);
     border-radius: 15px;
+    touch-action: none;
   }
-  #controls {
+  .game-container {
     text-align: center;
-    margin-bottom: 10px;
-  }
-  select {
-    font-size: 16px;
-    padding: 5px 10px;
-    border-radius: 8px;
-    border: 2px solid #ffb3d9;
   }
 </style>
 </head>
 <body>
-
-<div id="controls">
-  <label for="player">Choose your player: </label>
-  <select id="player">
-    <option value="shaady">Shaady 💙</option>
-    <option value="shaary">Shaary 💖</option>
-  </select>
+<div class="game-container">
+<canvas id="sliceCanvas" width="350" height="500"></canvas>
 </div>
 
-<canvas id="gameCanvas" width="350" height="500"></canvas>
-
 <script>
-const canvas = document.getElementById("gameCanvas");
+const canvas = document.getElementById("sliceCanvas");
 const ctx = canvas.getContext("2d");
-const basket = { x: 150, y: 450, w: 50, h: 30, speed: 5 };
-const hearts = [];
+
+let hearts = [];
+let gameOver = false;
 let score = 0;
-let rareHeartChance = 0.05; // 5% chance for golden heart
 
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft") basket.x -= basket.speed;
-  if (e.key === "ArrowRight") basket.x += basket.speed;
-});
-
-function drawBasket() {
-  const player = document.getElementById("player").value;
-  ctx.fillStyle = player === "shaary" ? "#d63384" : "#3498db";
-  ctx.fillRect(basket.x, basket.y, basket.w, basket.h);
-}
-
-function drawHeart(heart) {
-  ctx.font = "20px serif";
-  ctx.fillText(heart.isRare ? "💛" : "💗", heart.x, heart.y);
-}
+// Load emojis as images
+const regularHeart = new Image();
+regularHeart.src = "https://twemoji.maxcdn.com/v/latest/72x72/1f497.png"; // 💗
+const bombHeart = new Image();
+bombHeart.src = "https://twemoji.maxcdn.com/v/latest/72x72/1f493.png"; // 💓 (acts as bomb)
 
 function spawnHeart() {
-  const x = Math.random() * (canvas.width - 20);
-  const isRare = Math.random() < rareHeartChance;
-  hearts.push({ x, y: 0, isRare });
+  const x = Math.random() * (canvas.width - 60);
+  const isBomb = Math.random() < 0.15; // 15% chance it's a bomb
+  hearts.push({
+    x: x,
+    y: -60,
+    size: 60,
+    isBomb: isBomb,
+    sliced: false
+  });
+}
+
+function drawHearts() {
+  hearts.forEach(h => {
+    const img = h.isBomb ? bombHeart : regularHeart;
+    ctx.drawImage(img, h.x, h.y, h.size, h.size);
+  });
 }
 
 function updateHearts() {
   for (let i = hearts.length - 1; i >= 0; i--) {
-    hearts[i].y += 2;
-    if (
-      hearts[i].y + 20 > basket.y &&
-      hearts[i].x > basket.x &&
-      hearts[i].x < basket.x + basket.w
-    ) {
-      score += hearts[i].isRare ? 10 : 1;
-      hearts.splice(i, 1);
-    } else if (hearts[i].y > canvas.height) {
+    hearts[i].y += 3;
+    if (hearts[i].y > canvas.height) {
       hearts.splice(i, 1);
     }
   }
 }
+
+function checkSlice(x, y) {
+  for (let i = 0; i < hearts.length; i++) {
+    const h = hearts[i];
+    if (!h.sliced &&
+        x >= h.x && x <= h.x + h.size &&
+        y >= h.y && y <= h.y + h.size) {
+      h.sliced = true;
+      if (h.isBomb) {
+        gameOver = true;
+        alert("💥 BOOM! You sliced a beating heart! Game Over.");
+      } else {
+        score += 1;
+      }
+      hearts.splice(i, 1);
+      break;
+    }
+  }
+}
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!gameOver) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    checkSlice(x, y);
+  }
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  if (!gameOver) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    checkSlice(x, y);
+  }
+}, { passive: false });
 
 function drawScore() {
   ctx.fillStyle = "#8e44ad";
@@ -355,18 +375,18 @@ function drawScore() {
 }
 
 function gameLoop() {
+  if (gameOver) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (Math.random() < 0.05) spawnHeart();
   updateHearts();
-  drawBasket();
-  hearts.forEach(drawHeart);
+  drawHearts();
   drawScore();
   requestAnimationFrame(gameLoop);
 }
 
 gameLoop();
 </script>
-
 </body>
 </html>
 """, height=580)
+
