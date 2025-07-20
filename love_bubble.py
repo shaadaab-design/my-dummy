@@ -458,401 +458,455 @@ gameLoop();
 </body>
 </html>
 """, height=640)
-st.markdown("---")
-st.markdown("### 🎹 Piano Tiles - Love Edition 🎹")
-st.markdown("Classic piano tiles with your favorite song! 💕")
-
-# YouTube URL input
-youtube_url = st.text_input("🎵 YouTube URL:", value="https://youtu.be/d1BzzJSNbDU?si=Gqvo5pPL4orJtE0W", placeholder="https://youtu.be/...")
-
-components.html(f"""
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-  body {{ 
-    margin: 0; 
-    background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 25%, #ffd4e8 50%, #ffb3d9 100%);
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
-  }}
-  
-  #gameContainer {{
-    position: relative;
-    width: 400px;
-    height: 600px;
-    margin: 0 auto;
-    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,179,217,0.2) 100%);
-    border: 3px solid #ffb3d9;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(214, 51, 132, 0.2);
-  }}
-  
-  .lane {{
-    position: absolute;
-    width: 25%;
-    height: 100%;
-    border-right: 2px solid rgba(255,179,217,0.5);
-    background: rgba(255,255,255,0.1);
-  }}
-  
-  .lane:nth-child(1) {{ left: 0%; background: rgba(255,182,193,0.1); }}
-  .lane:nth-child(2) {{ left: 25%; background: rgba(255,160,180,0.1); }}
-  .lane:nth-child(3) {{ left: 50%; background: rgba(255,140,170,0.1); }}
-  .lane:nth-child(4) {{ left: 75%; border-right: none; background: rgba(255,120,160,0.1); }}
-  
-  .tile {{
-    position: absolute;
-    width: 98%;
-    left: 1%;
-    height: 80px;
-    background: linear-gradient(145deg, #2c3e50, #34495e);
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    cursor: pointer;
-    transition: all 0.1s ease;
-    border: 2px solid #34495e;
-  }}
-  
-  .tile:hover {{
-    background: linear-gradient(145deg, #3a4a5c, #4a5a6e);
-  }}
-  
-  .tile.hit {{
-    background: linear-gradient(145deg, #ff6b9d, #d63384) !important;
-    transform: scale(0.95);
-    box-shadow: 0 2px 4px rgba(214, 51, 132, 0.5);
-  }}
-  
-  .tile.missed {{
-    background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
-    animation: shake 0.5s ease-in-out;
-  }}
-  
-  @keyframes shake {{
-    0%, 100% {{ transform: translateX(0); }}
-    25% {{ transform: translateX(-5px); }}
-    75% {{ transform: translateX(5px); }}
-  }}
-  
-  #ui {{
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    right: 15px;
-    display: flex;
-    justify-content: space-between;
-    color: #8e44ad;
-    font-weight: bold;
-    z-index: 100;
-    background: rgba(255,255,255,0.8);
-    padding: 10px;
-    border-radius: 10px;
-  }}
-  
-  #message {{
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    text-align: center;
-    color: #d63384;
-    font-weight: bold;
-    font-size: 16px;
-    min-height: 50px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0 5px 15px rgba(214, 51, 132, 0.2);
-  }}
-  
-  #startBtn, #retryBtn {{
-    background: linear-gradient(45deg, #ff6b9d, #d63384);
-    border: none;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    padding: 12px 25px;
-    border-radius: 25px;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }}
-  
-  #startBtn:hover, #retryBtn:hover {{
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(214, 51, 132, 0.4);
-  }}
-  
-  .floating-heart {{
-    position: absolute;
-    font-size: 20px;
-    opacity: 0.4;
-    animation: floatUp 3s ease-out infinite;
-    pointer-events: none;
-    z-index: 50;
-  }}
-  
-  @keyframes floatUp {{
-    0% {{ transform: translateY(0px) scale(1); opacity: 0.6; }}
-    100% {{ transform: translateY(-100px) scale(0.5); opacity: 0; }}
-  }}
-</style>
+  <meta charset="UTF-8">
+  <title>Piano Tiles: Premium Edition</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Arial', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #gameContainer {
+      position: relative;
+      width: 340px;
+      height: 620px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(240,240,255,0.92) 100%);
+      border: 3px solid #4a5568;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    .lane {
+      position: absolute;
+      width: 25%;
+      height: 100%;
+      background: transparent;
+      cursor: pointer;
+      z-index: 1;
+      border-right: 1px solid #cbd5e0;
+      transition: background 0.15s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .lane:active,
+    .lane.pressed {
+      background: rgba(34, 77, 184, 0.16);
+    }
+    .lane:last-child { border-right: none; }
+    .tile {
+      position: absolute;
+      width: 92%;
+      left: 4%;
+      height: 110px;
+      background: linear-gradient(150deg, #1a202c 85%, #2d3748 100%);
+      border: 1.5px solid #4a5568;
+      border-radius: 7px;
+      box-shadow: 0 4px 11px rgba(0,0,0,0.25);
+      cursor: pointer;
+      transition: box-shadow 0.11s;
+      z-index: 3;
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      font-size: 19px;
+      color: #fff;
+      font-weight: 700;
+      user-select: none;
+    }
+    .tile.hit {
+      background: linear-gradient(145deg, #4fd1c5 60%, #38a169 100%);
+      border-color: #48bb78;
+      box-shadow: 0 0 22px #48bb78bb;
+      animation: scalehit 0.3s;
+    }
+    @keyframes scalehit {
+      0% { transform: scale(1.0);}
+      50% { transform: scale(0.93);}
+      100% { transform: scale(1.0);}
+    }
+    .tile.missed {
+      background: linear-gradient(150deg, #e53e3e, #c53030);
+      border-color: #c53030;
+      animation: shake 0.25s;
+    }
+    @keyframes shake {
+      0%,100%{transform:translateX(0);}
+      30%{transform:translateX(-5px);}
+      60%{transform:translateX(5px);}
+    }
+    .hit-zone {
+      position: absolute;
+      bottom: 95px;
+      width: 100%;
+      height: 110px;
+      background: linear-gradient(to top, rgba(46, 98, 234, 0.09), transparent);
+      border-top: 2px solid #667eea;
+      border-bottom: 2px solid #38a169;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #ui {
+      position: absolute;
+      top: 9px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      color: #4a5568;
+      background: rgba(255,255,255,0.93);
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1;
+      font-weight: bold;
+      z-index: 20;
+      padding: 7px 12px 4px 12px;
+    }
+    .score-text {
+      position: absolute;
+      font-size: 20px;
+      font-weight: 900;
+      color: #48bb78;
+      pointer-events: none;
+      z-index: 100;
+      left: 51%;
+      top: 35%;
+      animation: scoreFloat 0.9s ease-out forwards;
+      transform: translate(-50%, -50%);
+      text-shadow: 0 2px 12px #41e79c99;
+    }
+    @keyframes scoreFloat {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(1.1);}
+      100% { opacity: 0; transform: translate(-50%, -158%) scale(1.23);}
+    }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 220px;
+      min-height: 110px;
+      text-align: center;
+      color: #394664;
+      font-weight: bold;
+      font-size: 18px;
+      background: rgba(245,250,255,0.98);
+      border-radius: 17px;
+      box-shadow: 0 8px 24px #6276be44;
+      z-index: 200;
+      padding: 22px 14px;
+      display: none;
+    }
+    #startBtn, #pauseBtn, #retryBtn, #muteBtn {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 9px 18px;
+      border-radius: 19px;
+      margin: 8px 4px 2px 4px;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.18s;
+    }
+    #startBtn:hover, #pauseBtn:hover, #retryBtn:hover, #muteBtn:hover {
+      box-shadow: 0 5px 13px #667eea99;
+      transform: translateY(-2px);
+    }
+    #muteBtn.on { background: linear-gradient(45deg, #48bb78, #38a169);}
+    .lane-indicator {
+      position: absolute;
+      width: 50px;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      margin: auto;
+      color: #764ba2d0;
+      font-weight: bold;
+      opacity: 0.48;
+      pointer-events: none;
+      text-align: center;
+      user-select: none;
+    }
+    .lane[data-lane="0"] .lane-indicator { content: "A"; }
+    .lane[data-lane="1"] .lane-indicator { content: "S"; }
+    .lane[data-lane="2"] .lane-indicator { content: "D"; }
+    .lane[data-lane="3"] .lane-indicator { content: "F"; }
+    @media (max-width: 400px) {
+      #gameContainer { width: 100vw; height: 100vh; min-width: 90vw; min-height: 95vh;}
+    }
+  </style>
 </head>
 <body>
-<div id="gameContainer">
-  <div class="lane"></div>
-  <div class="lane"></div>
-  <div class="lane"></div>
-  <div class="lane"></div>
-  
-  <div id="ui">
-    <div>🎼 Score: <span id="score">0</span></div>
-    <div>💗 Lives: <span id="lives">3</span></div>
-    <div>🎵 Combo: <span id="combo">0</span></div>
+  <div id="gameContainer">
+    <div class="lane" data-lane="0"><div class="lane-indicator">A</div></div>
+    <div class="lane" data-lane="1"><div class="lane-indicator">S</div></div>
+    <div class="lane" data-lane="2"><div class="lane-indicator">D</div></div>
+    <div class="lane" data-lane="3"><div class="lane-indicator">F</div></div>
+    <div class="hit-zone"></div>
+    <div id="ui">
+      <div>🎼 <span>Score: </span><span id="score">0</span></div>
+      <div>💗 <span>Lives: </span><span id="lives">3</span></div>
+      <div>🎵 <span>Combo: </span><span id="streak">0</span></div>
+      <div>📈 <span>Lvl: </span><span id="level">1</span></div>
+      <button id="muteBtn" title="Mute/Unmute Music">🔊</button>
+    </div>
+    <div id="message">
+      <div style="font-size: 20px;">🎹 Piano Tiles: Tap Edition 🎹</div>
+      <div style="font-size: 14px; margin: 10px 0;">Tap / Click the black tiles in the hit zone!</div>
+      <div style="font-size: 12px; margin-bottom: 14px;">Use: A, S, D, F (keyboard or touch!)</div>
+      <button id="startBtn">🎵 Start Game</button>
+      <button id="pauseBtn" style="display:none;">⏸️ Pause</button>
+      <button id="retryBtn" style="display:none;">🔁 Retry</button>
+    </div>
   </div>
-  
-  <div id="message">
-    Click "Start" to begin playing! 💕<br>
-    <button id="startBtn">🎵 Start Game</button>
-    <button id="retryBtn" style="display:none;">🔁 Try Again</button>
-  </div>
-</div>
-
-<script>
-const gameContainer = document.getElementById('gameContainer');
-const scoreEl = document.getElementById('score');
-const livesEl = document.getElementById('lives');
-const comboEl = document.getElementById('combo');
-const messageEl = document.getElementById('message');
-const startBtn = document.getElementById('startBtn');
-const retryBtn = document.getElementById('retryBtn');
-
-let score = 0;
-let lives = 3;
-let combo = 0;
-let gameActive = false;
-let tiles = [];
-let gameSpeed = 2;
-let spawnRate = 1000; // milliseconds
-
-// Sample beat pattern (you can customize this for your song)
-const beatPattern = [0, 1, 2, 3, 1, 0, 2, 1, 3, 0, 1, 2, 0, 3, 1, 2, 3, 0, 1, 2];
-let patternIndex = 0;
-
-function createFloatingHeart(x, y) {{
-  const heart = document.createElement('div');
-  heart.className = 'floating-heart';
-  heart.innerHTML = ['💗', '💕', '✨'][Math.floor(Math.random() * 3)];
-  heart.style.left = x + 'px';
-  heart.style.top = y + 'px';
-  gameContainer.appendChild(heart);
-  
-  setTimeout(() => heart.remove(), 3000);
-}}
-
-function createTile(laneIndex) {{
-  const tile = document.createElement('div');
-  tile.className = 'tile';
-  tile.style.left = (laneIndex * 25) + '%';
-  tile.style.top = '-80px';
-  tile.dataset.lane = laneIndex;
-  tile.dataset.hit = 'false';
-  
-  gameContainer.appendChild(tile);
-  tiles.push(tile);
-  
-  // Animate tile falling
-  let position = -80;
-  const fallInterval = setInterval(() => {{
-    if (!gameActive) {{
-      clearInterval(fallInterval);
-      return;
-    }}
-    
-    position += gameSpeed;
-    tile.style.top = position + 'px';
-    
-    // Check if tile reached bottom
-    if (position > 600) {{
-      clearInterval(fallInterval);
-      if (tile.dataset.hit === 'false') {{
-        // Missed tile
-        missedTile();
-      }}
-      tile.remove();
-      tiles = tiles.filter(t => t !== tile);
-    }}
-  }}, 16);
-  
-  // Add click handler to the lane
-  const lanes = document.querySelectorAll('.lane');
-  lanes[laneIndex].onclick = () => hitTile(tile, laneIndex);
-}}
-
-function hitTile(tile, laneIndex) {{
-  if (tile.dataset.hit === 'true' || !gameActive) return;
-  
-  const tileRect = tile.getBoundingClientRect();
-  const containerRect = gameContainer.getBoundingClientRect();
-  
-  // Check if tile is in the hit zone (bottom 25% of screen)
-  const hitZone = containerRect.height * 0.75;
-  const tilePosition = tileRect.top - containerRect.top;
-  
-  if (tilePosition > hitZone && tilePosition < containerRect.height - 100) {{
-    // Good hit!
-    tile.dataset.hit = 'true';
-    tile.classList.add('hit');
-    
-    score += 10 + (combo * 2);
-    combo++;
-    scoreEl.textContent = score;
-    comboEl.textContent = combo;
-    
-    // Create floating heart effect
-    const x = (laneIndex * 100) + 50;
-    const y = tilePosition;
-    createFloatingHeart(x, y);
-    
-    // Show encouraging messages
-    if (combo === 10) {{
-      showMessage("Amazing combo! You're in the zone! 💕", 2000);
-    }} else if (combo === 25) {{
-      showMessage("Incredible! My lil piano master! 🎼✨", 2000);
-    }} else if (combo === 50) {{
-      showMessage("LEGENDARY! You're making my heart sing! 💗", 2000);
-    }}
-    
-    // Increase game speed slightly
-    if (score % 100 === 0 && gameSpeed < 4) {{
-      gameSpeed += 0.2;
-      spawnRate = Math.max(spawnRate - 50, 400);
-    }}
-  }} else {{
-    // Bad timing
-    combo = 0;
-    comboEl.textContent = combo;
-    showMessage("Off-beat! Wait for the right moment 💔", 1000);
-  }}
-}}
-
-function missedTile() {{
-  lives--;
-  combo = 0;
-  livesEl.textContent = lives;
-  comboEl.textContent = combo;
-  
-  if (lives <= 0) {{
-    endGame();
-  }} else {{
-    showMessage("Missed a note! Focus, my love 💗", 1500);
-  }}
-}}
-
-function showMessage(msg, duration = 2000) {{
-  const originalContent = messageEl.innerHTML;
-  messageEl.innerHTML = msg;
-  setTimeout(() => {{
-    if (gameActive) {{
-      messageEl.innerHTML = "Keep the rhythm! You're doing great! 💕";
-    }}
-  }}, duration);
-}}
-
-function endGame() {{
-  gameActive = false;
-  tiles.forEach(tile => tile.remove());
-  tiles = [];
-  
-  let endMessage = "";
-  if (score >= 500) {{
-    endMessage = "WOW! Absolutely incredible! You're my piano virtuoso! 🎼👑💕";
-  }} else if (score >= 200) {{
-    endMessage = "Amazing performance! You made beautiful music! 🎵💗";
-  }} else if (score >= 100) {{
-    endMessage = "Good job! You're getting the hang of it! 💕";
-  }} else {{
-    endMessage = "Awh, that's okay! Practice makes perfect, my love 💗";
-  }}
-  
-  messageEl.innerHTML = `
-    Game Over! Final Score: ${{score}}<br>
-    ${{endMessage}}<br>
-  `;
-  retryBtn.style.display = 'inline-block';
-}}
-
-function startGame() {{
-  gameActive = true;
-  score = 0;
-  lives = 3;
-  combo = 0;
-  gameSpeed = 2;
-  spawnRate = 1000;
-  patternIndex = 0;
-  
-  scoreEl.textContent = score;
-  livesEl.textContent = lives;
-  comboEl.textContent = combo;
-  messageEl.innerHTML = "Keep the rhythm! You're doing great! 💕";
-  startBtn.style.display = 'none';
-  retryBtn.style.display = 'none';
-  
-  // Start spawning tiles
-  spawnTiles();
-}}
-
-function spawnTiles() {{
-  if (!gameActive) return;
-  
-  // Use the beat pattern to determine which lane
-  const laneIndex = beatPattern[patternIndex % beatPattern.length];
-  createTile(laneIndex);
-  patternIndex++;
-  
-  // Schedule next tile
-  setTimeout(spawnTiles, spawnRate);
-}}
-
-// Add floating hearts in background
-setInterval(() => {{
-  if (gameActive) {{
-    const x = Math.random() * 350;
-    const y = Math.random() * 500 + 100;
-    createFloatingHeart(x, y);
-  }}
-}}, 2000);
-
-startBtn.addEventListener('click', startGame);
-retryBtn.addEventListener('click', () => {{
-  startGame();
-}});
-
-// Add keyboard support
-document.addEventListener('keydown', (e) => {{
-  if (!gameActive) return;
-  
-  let laneIndex = -1;
-  switch(e.key) {{
-    case 'a': case 'A': case '1': laneIndex = 0; break;
-    case 's': case 'S': case '2': laneIndex = 1; break;
-    case 'd': case 'D': case '3': laneIndex = 2; break;
-    case 'f': case 'F': case '4': laneIndex = 3; break;
-  }}
-  
-  if (laneIndex >= 0) {{
-    // Find the lowest tile in this lane
-    const laneTiles = tiles.filter(t => parseInt(t.dataset.lane) === laneIndex && t.dataset.hit === 'false');
-    if (laneTiles.length > 0) {{
-      // Sort by position and hit the lowest one
-      laneTiles.sort((a, b) => parseInt(a.style.top) - parseInt(b.style.top));
-      hitTile(laneTiles[laneTiles.length - 1], laneIndex);
-    }}
-  }}
-}});
-</script>
+  <audio id="soundHit" src="https://cdn.pixabay.com/audio/2022/12/19/audio_12f170b7c3.mp3"></audio>
+  <audio id="soundMiss" src="https://cdn.pixabay.com/audio/2022/12/19/audio_c8b4612ca2.mp3"></audio>
+  <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2023/05/30/audio_145f3674fa.mp3" loop></audio>
+  <script>
+    // --- GAME VARIABLES ---
+    let score = 0, lives = 3, streak = 0, maxStreak = 0, level = 1;
+    let gameActive = false, gamePaused = false, animationId = null;
+    let tileSpeed = 2.8, minTileSpeed = 2, maxTileSpeed = 8, spawnRate = 1100, lastSpawnTime = 0;
+    let tiles = [];
+    const hitZoneStart = 415, hitZoneEnd = 525; // y px
+    const keysMap = { 'KeyA':0, 'KeyS':1, 'KeyD':2, 'KeyF':3 };
+    // --- DOM ---
+    const gameContainer = document.getElementById('gameContainer');
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const streakEl = document.getElementById('streak');
+    const levelEl = document.getElementById('level');
+    const messageEl = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const retryBtn = document.getElementById('retryBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const bgMusic = document.getElementById('bgMusic');
+    const soundHit = document.getElementById('soundHit');
+    const soundMiss = document.getElementById('soundMiss');
+    // --- AUDIO MUTE ---
+    let globalMute = false;
+    muteBtn.addEventListener('click', () => {
+      globalMute = !globalMute;
+      bgMusic.muted = soundHit.muted = soundMiss.muted = globalMute;
+      muteBtn.textContent = globalMute ? "🔈" : "🔊";
+      muteBtn.className = globalMute ? "on":"";
+    });
+    // --- UI UPDATE ---
+    function updateUI() {
+      scoreEl.textContent = score;
+      livesEl.textContent = lives;
+      streakEl.textContent = streak;
+      levelEl.textContent = level;
+    }
+    function showScoreText(points, emoji="") {
+      const txt = document.createElement('div');
+      txt.className = 'score-text';
+      txt.textContent = `${emoji}+${points}`;
+      gameContainer.appendChild(txt);
+      setTimeout(()=>txt.remove(),900);
+    }
+    // --- TILE LOGIC ---
+    function createTile(laneIndex) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.style.left = `${laneIndex*25+4}%`;
+      tile.style.top = `-115px`;
+      tile.dataset.lane = laneIndex;
+      gameContainer.appendChild(tile);
+      tiles.push({
+        element: tile,
+        lane: laneIndex,
+        y: -115,
+        hit: false,
+        missed: false,
+      });
+      // Optional: Lane sound per tile (uncomment lines and add real piano sounds!)
+      // tile.dataset.soundUrl = perLanePianoSounds[laneIndex];
+    }
+    function spawnNewTile() {
+      const recentLanes = tiles.slice(-3).map(t=>t.lane);
+      let available = [0,1,2,3].filter(l=>!recentLanes.includes(l));
+      if(available.length===0) available = [0,1,2,3];
+      const idx = available[Math.floor(Math.random()*available.length)];
+      createTile(idx);
+    }
+    // --- GAME UPDATE LOOP ---
+    function updateGame() {
+      if (!gameActive || gamePaused) return;
+      tiles.forEach(tile => {
+        if(tile.hit||tile.missed) return;
+        tile.y += tileSpeed;
+        tile.element.style.top = tile.y+"px";
+        // Missed: if passes hit zone bottom w/o being hit
+        if(tile.y > hitZoneEnd+35 && !tile.hit && !tile.missed) {
+          tile.missed = true;
+          tile.element.classList.add('missed');
+          lives--; streak = 0;
+          updateUI();
+          if(!globalMute) soundMiss.cloneNode().play();
+          setTimeout(()=>{ if(tile.element) tile.element.remove(); },350);
+          if(lives<=0) endGame();
+        }
+      });
+      // Remove offscreen tiles
+      tiles = tiles.filter(t => t.y < 710 && !t.missed || !t.hit);
+      // Spawning
+      const now = Date.now();
+      if (now-lastSpawnTime >= spawnRate) {
+        spawnNewTile(); lastSpawnTime = now;
+      }
+      animationId = requestAnimationFrame(updateGame);
+    }
+    // --- INPUT HANDLERS ---
+    function tryHitTile(lane) {
+      if(!gameActive||gamePaused) return;
+      // Find FIRST available tile in this lane in hit zone
+      const tl = tiles.find(tile =>
+        !tile.hit && !tile.missed && tile.lane===lane &&
+        tile.y >= hitZoneStart && tile.y <= hitZoneEnd
+      );
+      if (tl) {
+        tl.hit = true; streak++; maxStreak = Math.max(maxStreak,streak);
+        score += 150 + (streak>1 ? streak*8 : 0);
+        updateUI();
+        tl.element.classList.add("hit");
+        if(!globalMute) soundHit.cloneNode().play();
+        showScoreText(150+(streak>1?streak*8:0),"🎵");
+        setTimeout(()=>{ if(tl.element) tl.element.remove(); },260);
+        // Level up
+        if(score>=level*800) { levelUp(); }
+        return true;
+      } else {
+        // Missed: wrong tap
+        lives--; streak=0;
+        updateUI();
+        if(!globalMute) soundMiss.cloneNode().play();
+        showScoreText(0,"😐");
+        if(lives<=0) endGame();
+        return false;
+      }
+    }
+    // Lane tap (mouse/touch)
+    document.querySelectorAll('.lane').forEach((laneEl, i) => {
+      // Touch/click
+      laneEl.addEventListener("mousedown", e=>{
+        e.preventDefault(); tryHitTile(i);
+        laneEl.classList.add("pressed"); setTimeout(()=>laneEl.classList.remove("pressed"),180);
+      });
+      laneEl.addEventListener("touchstart", e=>{
+        e.preventDefault(); tryHitTile(i);
+        laneEl.classList.add("pressed"); setTimeout(()=>laneEl.classList.remove("pressed"),180);
+      });
+    });
+    // Lane tap (key)
+    document.addEventListener('keydown', function(e) {
+      if (!gameActive||gamePaused) return;
+      if (e.repeat) return;
+      let idx = keysMap[e.code];
+      if(typeof idx==="number") {
+        document.querySelector(`.lane[data-lane="${idx}"]`).classList.add("pressed");
+        tryHitTile(idx);
+      } else if(e.code==="Space") {
+        pauseGame();
+      }
+    });
+    document.addEventListener('keyup', function(e){
+      let idx = keysMap[e.code];
+      if(typeof idx==="number") {
+        document.querySelector(`.lane[data-lane="${idx}"]`).classList.remove("pressed");
+      }
+    });
+    // Global: clear pressed on mouseup/touchup
+    document.addEventListener('mouseup', ()=> {
+      document.querySelectorAll('.lane').forEach(l=>l.classList.remove("pressed"));
+    });
+    // --- LEVEL UP ---
+    function levelUp() {
+      level++;
+      tileSpeed = Math.min(maxTileSpeed, tileSpeed+0.37);
+      spawnRate = Math.max(410, spawnRate-60);
+      showMessage(`🎉 Level ${level}! 🎉<br>Tiles move faster!`,1400);
+    }
+    // --- MESSAGE UI ---
+    function showMessage(msg,duration=0) {
+      messageEl.innerHTML = msg;
+      messageEl.style.display = 'block';
+      if(duration) setTimeout(()=>{if(gameActive)messageEl.style.display="none";},duration);
+    }
+    // --- MAIN GAME STATE ---
+    function startGame(){
+      score = 0; streak=0; maxStreak=0; lives=3; level=1;
+      tileSpeed = minTileSpeed; spawnRate = 1100;
+      gameActive = true; gamePaused=false; tiles.forEach(t=>t.element.remove()); tiles=[];
+      lastSpawnTime = Date.now(); updateUI();
+      messageEl.style.display='none'; startBtn.style.display="none";
+      pauseBtn.style.display="inline-block"; retryBtn.style.display="none";
+      if(!globalMute) setTimeout(()=>{bgMusic.play()},300);
+      spawnNewTile();
+      animationId = requestAnimationFrame(updateGame);
+    }
+    function pauseGame(){
+      if(!gameActive) return;
+      gamePaused = !gamePaused;
+      if(gamePaused) {
+        pauseBtn.textContent="▶️ Resume";
+        showMessage("Game Paused. Press Space or tap Pause to continue",0);
+        if(!globalMute) bgMusic.pause();
+      } else {
+        pauseBtn.textContent="⏸️ Pause";
+        messageEl.style.display="none";
+        lastSpawnTime = Date.now();
+        if(!globalMute) bgMusic.play();
+        animationId = requestAnimationFrame(updateGame);
+      }
+    }
+    function endGame(){
+      gameActive=false; gamePaused=false; bgMusic.pause();
+      if (animationId) cancelAnimationFrame(animationId);
+      pauseBtn.style.display="none"; retryBtn.style.display="inline-block";
+      let endings = [
+        {score:2200, msg:"👑 MASTER PIANIST! Flawless! 👑"},
+        {score:1200, msg:"🌟 AMAZING! Great rhythm! 🌟"},
+        {score:700,  msg:"💕 Well played, keep going! 💕"},
+        {score:350,  msg:"🎵 Good work! Try for more! 🎵"},
+        {score:0,    msg:"💗 Nice try! Practice makes perfect! 💗"}
+      ];
+      let endMsg = endings.find(e=>score>=e.score).msg;
+      showMessage(
+        `<div style="font-size:20px;">🎹 Game Over! 🎹</div>
+         <div style="margin:10px 0;">Score: ${score}</div>
+         <div style="margin:10px 0;">Max Streak: ${maxStreak}</div>
+         <div style="margin:10px 0;">Level: ${level}</div>
+         <div style="font-size:14px; margin:10px 0;">${endMsg}</div>`,0
+      );
+    }
+    // --- BUTTONS ---
+    startBtn.addEventListener('click',startGame);
+    pauseBtn.addEventListener('click',pauseGame);
+    retryBtn.addEventListener('click',startGame);
+    document.getElementById('gameContainer').addEventListener('contextmenu',e=>e.preventDefault());
+    // --- INIT SHOW MESSAGE ---
+    showMessage(
+      `<div style="font-size:20px;">🎹 Piano Tiles: Tap Edition 🎹</div>
+      <div style="font-size:14px; margin:10px 0;">Tap / Click the black tiles in the hit zone!</div>
+      <div style="font-size:12px; margin-bottom:15px;">A, S, D, F / Tap / Click / Touch</div>`,0
+    );
+    // --- Responsive ---
+    window.addEventListener("blur",()=>{ if(gameActive&&!gamePaused) pauseGame(); });
+    // --- Music play on interaction (Mobile) ---
+    document.body.addEventListener("touchstart",()=>{ if(gameActive&&!bgMusic.paused&&!globalMute) bgMusic.play(); },{once:true});
+  </script>
 </body>
 </html>
-""", height=680)
