@@ -458,4 +458,11 @@ gameLoop();
 </body>
 </html>
 """, height=640)
+import streamlit.components.v1 as components
+
+with open("bunny_platformer.html", 'r', encoding='utf-8') as f:
+    html_code = f.read()
+
+st.markdown("## 🐰 Bunny Platformer Game")
+components.html(html_code, height=600, scrolling=False)
 
