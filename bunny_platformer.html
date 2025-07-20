@@ -1,108 +1,169 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>Bunny Platformer Game</title>
+  <title>Bunny Platformer</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: linear-gradient(135deg, #c1f0f6, #ffe1f2);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #aee1f9; overflow: hidden; font-family: sans-serif; }
+    canvas { background: #87ceeb; display: block; margin: 0 auto; }
+
+    .controls {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 100;
     }
-    canvas {
-      display: block;
-      margin: auto;
-      background: #fff0f6;
-      border: 3px solid #ff89c2;
-      box-shadow: 0 10px 30px rgba(255, 137, 194, 0.3);
+
+    .btn {
+      width: 60px;
+      height: 60px;
+      background: #fff;
+      border-radius: 50%;
+      border: 2px solid #555;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 60px;
+      user-select: none;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+      touch-action: manipulation;
+    }
+
+    .btn:active {
+      background: #ddd;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <!-- On-screen buttons -->
+  <div class="controls">
+    <div class="btn" id="leftBtn">←</div>
+    <div class="btn" id="jumpBtn">↑</div>
+    <div class="btn" id="rightBtn">→</div>
+  </div>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const gravity = 0.5;
-    const jumpPower = -10;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
     const player = {
       x: 50,
       y: 300,
-      width: 30,
-      height: 30,
-      color: "#ff69b4",
-      dy: 0,
-      onGround: false,
+      width: 40,
+      height: 40,
+      color: '#ff69b4',
+      vx: 0,
+      vy: 0,
+      speed: 3,
+      jumpPower: 10,
+      grounded: false
     };
 
+    const gravity = 0.5;
+    const groundHeight = 50;
+
     const platforms = [
-      { x: 0, y: 370, width: 600, height: 30 },   // Ground
-      { x: 120, y: 300, width: 100, height: 20 },
-      { x: 260, y: 250, width: 100, height: 20 },
-      { x: 400, y: 200, width: 100, height: 20 },
+      { x: 0, y: canvas.height - groundHeight, width: canvas.width, height: groundHeight },
+      { x: 200, y: 300, width: 100, height: 20 },
+      { x: 400, y: 250, width: 100, height: 20 },
     ];
 
-    function drawPlayer() {
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-    }
+    let keys = { left: false, right: false, up: false };
 
-    function drawPlatforms() {
-      ctx.fillStyle = "#b0e0e6";
-      platforms.forEach(p => {
-        ctx.fillRect(p.x, p.y, p.width, p.height);
-      });
+    // Mobile buttons
+    document.getElementById('leftBtn').addEventListener('touchstart', () => keys.left = true);
+    document.getElementById('leftBtn').addEventListener('touchend', () => keys.left = false);
+    document.getElementById('rightBtn').addEventListener('touchstart', () => keys.right = true);
+    document.getElementById('rightBtn').addEventListener('touchend', () => keys.right = false);
+    document.getElementById('jumpBtn').addEventListener('touchstart', () => {
+      if (player.grounded) {
+        player.vy = -player.jumpPower;
+        player.grounded = false;
+      }
+    });
+
+    // Keyboard controls
+    document.addEventListener('keydown', e => {
+      if (e.code === 'ArrowLeft') keys.left = true;
+      if (e.code === 'ArrowRight') keys.right = true;
+      if (e.code === 'ArrowUp' && player.grounded) {
+        player.vy = -player.jumpPower;
+        player.grounded = false;
+      }
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.code === 'ArrowLeft') keys.left = false;
+      if (e.code === 'ArrowRight') keys.right = false;
+    });
+
+    function rectCollision(a, b) {
+      return a.x < b.x + b.width &&
+             a.x + a.width > b.x &&
+             a.y < b.y + b.height &&
+             a.y + a.height > b.y;
     }
 
     function update() {
-      player.dy += gravity;
-      player.y += player.dy;
+      // Horizontal movement
+      if (keys.left) player.vx = -player.speed;
+      else if (keys.right) player.vx = player.speed;
+      else player.vx = 0;
 
-      // Check collision with platforms
-      player.onGround = false;
-      platforms.forEach(p => {
-        if (
-          player.x < p.x + p.width &&
-          player.x + player.width > p.x &&
-          player.y + player.height < p.y + player.dy &&
-          player.y + player.height >= p.y
-        ) {
-          player.y = p.y - player.height;
-          player.dy = 0;
-          player.onGround = true;
+      player.x += player.vx;
+
+      // Gravity
+      player.vy += gravity;
+      player.y += player.vy;
+      player.grounded = false;
+
+      // Platform collision
+      for (let plat of platforms) {
+        if (rectCollision(player, plat)) {
+          if (player.vy >= 0 && player.y + player.height - player.vy <= plat.y) {
+            // Landed on top
+            player.y = plat.y - player.height;
+            player.vy = 0;
+            player.grounded = true;
+          }
         }
-      });
+      }
+
+      // Keep inside canvas
+      if (player.y + player.height > canvas.height) {
+        player.y = canvas.height - player.height;
+        player.vy = 0;
+        player.grounded = true;
+      }
     }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawPlatforms();
-      drawPlayer();
+
+      // Draw player
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      // Draw platforms
+      ctx.fillStyle = '#654321';
+      for (let plat of platforms) {
+        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+      }
     }
 
-    function gameLoop() {
+    function loop() {
       update();
       draw();
-      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(loop);
     }
 
-    gameLoop();
-
-    // Controls
-    document.addEventListener("keydown", (e) => {
-      if ((e.code === "Space" || e.code === "ArrowUp") && player.onGround) {
-        player.dy = jumpPower;
-      }
-      if (e.code === "ArrowRight") {
-        player.x += 10;
-      }
-      if (e.code === "ArrowLeft") {
-        player.x -= 10;
-      }
-    });
+    loop();
   </script>
 </body>
 </html>
+
