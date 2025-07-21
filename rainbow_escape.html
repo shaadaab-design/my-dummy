@@ -1,158 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌈 Rainbow Tilt Escape</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🌀 Maze Marble Tilt</title>
   <style>
-    body {
-      margin: 0;
-      background: linear-gradient(to top, #ffccff, #ccffff);
-      overflow: hidden;
-      font-family: sans-serif;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-      background: white;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
+    body { margin:0; background:#eef; overflow:hidden; }
+    canvas { display:block; margin:auto; }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const tileSize = 40;
-    const rows = 10;
-    const cols = 10;
-
-    let grid = [];
-    let disappearing = [];
-
-    let player = {
-      x: 0,
-      y: 0,
-      color: "hotpink"
+    const config = {
+      type: Phaser.AUTO,
+      width: 400,
+      height: 400,
+      physics: {
+        default: 'matter',
+        matter: { gravity: { y: 0.5, x: 0 }, debug: false }
+      },
+      scene: { preload, create }
     };
+    new Phaser.Game(config);
 
-    const level = [
-      "1111111111",
-      "1000000001",
-      "1011111101",
-      "1010000101",
-      "1010110101",
-      "1010100101",
-      "1010111101",
-      "1010000001",
-      "1011111111",
-      "1111111111",
-    ];
-
-    function initGrid() {
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          const val = level[y][x];
-          grid.push({
-            x: x * tileSize,
-            y: y * tileSize,
-            solid: val === "1",
-            touched: false
-          });
-        }
-      }
+    function preload() {
+      this.load.image('ball', 'https://labs.phaser.io/assets/sprites/purple_ball.png');
+      this.load.image('wall', 'https://labs.phaser.io/assets/sprites/block.png');
     }
 
-    function drawGrid() {
-      grid.forEach(tile => {
-        if (!tile.solid) {
-          if (tile.touched) return;
-          ctx.fillStyle = "#d6faff";
-          ctx.fillRect(tile.x, tile.y, tileSize, tileSize);
-        } else {
-          ctx.fillStyle = `hsl(${Math.random() * 360}, 80%, 70%)`;
-          ctx.fillRect(tile.x, tile.y, tileSize, tileSize);
-        }
+    function create() {
+      const maze = this.add.group();
+      const positions = [
+        {x:200,y:50, w:300,h:20}, {x:50,y:200, w:20,h:300},
+        {x:350,y:200, w:20,h:300}, {x:200,y:350,w:300,h:20},
+        // Add inner walls:
+        {x:150,y:150,w:200,h:20}, {x:250,y:250,w:200,h:20}
+      ];
+
+      positions.forEach(w => {
+        const wall = this.matter.add.rectangle(w.x, w.y, w.w, w.h, { isStatic: true });
+      });
+
+      const ball = this.matter.add.image(200, 200, 'ball', null, { shape: 'circle', restitution:0.4 });
+
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', e => {
+          const tiltX = Phaser.Math.Clamp(e.gamma, -30, 30) / 30;
+          const tiltY = Phaser.Math.Clamp(e.beta - 45, -30, 30) / 30;
+          ball.setVelocity(tiltX * 5, tiltY * 5);
+        });
+      }
+
+      this.input.keyboard.on('keydown', e => {
+        if (e.code === 'ArrowUp') ball.setVelocityY(-5);
+        if (e.code === 'ArrowDown') ball.setVelocityY(5);
+        if (e.code === 'ArrowLeft') ball.setVelocityX(-5);
+        if (e.code === 'ArrowRight') ball.setVelocityX(5);
       });
     }
-
-    function drawPlayer() {
-      ctx.fillStyle = player.color;
-      ctx.beginPath();
-      ctx.arc(
-        player.x * tileSize + tileSize / 2,
-        player.y * tileSize + tileSize / 2,
-        tileSize / 2.5,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    }
-
-    function update() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
-      drawPlayer();
-    }
-
-    function move(dx, dy) {
-      let newX = player.x + dx;
-      let newY = player.y + dy;
-
-      const tile = level[newY]?.[newX];
-      if (!tile || tile === "0") {
-        const tileIndex = newY * cols + newX;
-        if (grid[tileIndex] && !grid[tileIndex].touched) {
-          grid[tileIndex].touched = true;
-          player.x = newX;
-          player.y = newY;
-        } else {
-          alert("You fell!");
-          player.x = 0;
-          player.y = 0;
-          grid.forEach(t => t.touched = false);
-        }
-      } else {
-        player.x = newX;
-        player.y = newY;
-      }
-      update();
-    }
-
-    document.addEventListener("keydown", (e) => {
-      switch (e.key) {
-        case "ArrowUp": move(0, -1); break;
-        case "ArrowDown": move(0, 1); break;
-        case "ArrowLeft": move(-1, 0); break;
-        case "ArrowRight": move(1, 0); break;
-      }
-    });
-
-    // Touch controls for mobile
-    let startX, startY;
-    canvas.addEventListener("touchstart", (e) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    });
-
-    canvas.addEventListener("touchend", (e) => {
-      let dx = e.changedTouches[0].clientX - startX;
-      let dy = e.changedTouches[0].clientY - startY;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 20) move(1, 0);
-        else if (dx < -20) move(-1, 0);
-      } else {
-        if (dy > 20) move(0, 1);
-        else if (dy < -20) move(0, -1);
-      }
-    });
-
-    initGrid();
-    update();
   </script>
 </body>
 </html>
