@@ -762,79 +762,77 @@ with st.container():
                         st.rerun()
 
 import streamlit as st
-import random
 import time
-from datetime import datetime
+import random
 
-st.set_page_config(layout="wide", page_title="Hacker Terminal", page_icon="💻")
+st.set_page_config(page_title="Aim Trainer", layout="centered")
 
-# Custom CSS for hacker terminal style
-st.markdown("""
-<style>
-body {
-    background-color: black;
-    color: #33FF33;
-    font-family: 'Courier New', Courier, monospace;
-}
-h1, h2, h3, h4, h5, h6 {
-    color: #33FF33;
-}
-.stButton>button {
-    background-color: black;
-    color: #33FF33;
-    border: 1px solid #33FF33;
-}
-</style>
-""", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🎯 Aim Trainer for Fortnite</h1>", unsafe_allow_html=True)
 
-# Terminal title
-st.title("💻 SPY HACKER TERMINAL v1.9.1")
+if 'score' not in st.session_state:
+    st.session_state.score = []
+if 'start_time' not in st.session_state:
+    st.session_state.start_time = 0.0
+if 'target_pos' not in st.session_state:
+    st.session_state.target_pos = (0, 0)
+if 'game_started' not in st.session_state:
+    st.session_state.game_started = False
 
-# Start terminal simulation
-if 'start' not in st.session_state:
-    st.session_state.start = False
-if st.button("💣 INITIATE TERMINAL"):
-    st.session_state.start = True
-    st.experimental_rerun()
+box_size = 400
+target_radius = 30
 
-if st.session_state.start:
-    # Simulated commands
-    terminal_lines = [
-        "[ACCESS GRANTED]",
-        "Connecting to satellite relay...",
-        "Satellite uplink: ESTABLISHED",
-        "Downloading encryption key 🔑...",
-        "Key downloaded: A45-F2Z-89P-QY7",
-        "Injecting payload to enemy server...",
-        "Payload progress: ███████░░░ 73%",
-        "Trace detected ⚠️... Activating countermeasures...",
-        "Location spoofed: Greenland 🛰",
-        "Payload complete ✅",
-        "Mission Status: SUCCESS",
-    ]
+def start_game():
+    st.session_state.game_started = True
+    new_target()
 
-    placeholder = st.empty()
-    output = ""
-    for line in terminal_lines:
-        output += f"> {line}\n"
-        placeholder.code(output, language='bash')
-        time.sleep(random.uniform(0.3, 0.8))
+def new_target():
+    st.session_state.start_time = time.time()
+    st.session_state.target_pos = (
+        random.randint(target_radius, box_size - target_radius),
+        random.randint(target_radius, box_size - target_radius)
+    )
 
-    # Easter egg reveal
-    st.markdown("### 🔓 Access Hidden File?")
-    if st.button("🗂 View confidential.txt"):
-        st.success("TOP SECRET INTEL:\nOperation: MIDNIGHT SHADOW\nAgent: SHAARU-016\nStatus: ACTIVE\nPriority: OMEGA")
-        st.balloons()
+def click_target():
+    reaction_time = round(time.time() - st.session_state.start_time, 3)
+    st.session_state.score.append(reaction_time)
+    new_target()
 
-    # Live typing interaction
-    st.markdown("### ⌨️ Enter Live Command")
-    command = st.text_input("Type your command:")
-    if command:
-        response = f"Running '{command}'...\n> SUCCESS: Task '{command.upper()}' completed at {datetime.now().strftime('%H:%M:%S')}."
-        st.code(response, language='bash')
+if not st.session_state.game_started:
+    st.button("Start Game", on_click=start_game)
+else:
+    st.markdown(f"<h4 style='text-align: center;'>Score: {len(st.session_state.score)}</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h5 style='text-align: center;'>Last Reaction Time: {st.session_state.score[-1]}s</h5>" if st.session_state.score else "", unsafe_allow_html=True)
 
-    # Final shutdown
-    if st.button("🛑 TERMINATE TERMINAL"):
-        st.session_state.clear()
-        st.experimental_rerun()
+    target_x, target_y = st.session_state.target_pos
+
+    # Simulate clickable target area
+    canvas = st.empty()
+    click = canvas.button("🎯", key=random.randint(0, 999999))
+
+    if click:
+        click_target()
+
+    # Style the button to position it
+    canvas.markdown(f"""
+    <style>
+    div.stButton > button {{
+        position: absolute;
+        left: {target_x}px;
+        top: {target_y}px;
+        width: {target_radius*2}px;
+        height: {target_radius*2}px;
+        font-size: 30px;
+        border-radius: 50%;
+        background-color: red;
+        color: white;
+        z-index: 2;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+# Score display
+if st.session_state.score:
+    avg = round(sum(st.session_state.score)/len(st.session_state.score), 3)
+    st.markdown(f"<p style='text-align: center;'>Average Reaction Time: <b>{avg}s</b></p>", unsafe_allow_html=True)
+
 
