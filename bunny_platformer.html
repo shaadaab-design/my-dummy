@@ -2,142 +2,148 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bunny Platformer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    canvas {
-      background: skyblue;
-      display: block;
-      margin: 0 auto;
-    }
-
-    #controls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .btn {
-      padding: 10px;
-      font-size: 18px;
-      background-color: white;
-      border: 2px solid gray;
-      border-radius: 10px;
-    }
+    body { margin: 0; overflow: hidden; background-color: #d0f0c0; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-  <div id="controls">
-    <button class="btn" onclick="moveLeft()">←</button>
-    <button class="btn" onclick="jump()">↑</button>
-    <button class="btn" onclick="moveRight()">→</button>
-  </div>
-
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    let player;
+    let ground;
+    let platforms = [];
+    let gravity = 1;
+    let jumpPower = -15;
+    let moveSpeed = 5;
+    let canJump = false;
+    let keys = {};
+    let boxes = [];
+    let cameraOffset = 0;
 
-    const bunnyImg = new Image();
-    bunnyImg.src = "https://i.imgur.com/6ZzL5Bl.png"; // Bunny image!
+    function setup() {
+      createCanvas(windowWidth, 600);
 
-    let player = {
-      x: 50,
-      y: 300,
-      width: 40,
-      height: 40,
-      xVel: 0,
-      yVel: 0,
-      onGround: false
-    };
+      player = {
+        x: 50,
+        y: 100,
+        width: 40,
+        height: 40,
+        vx: 0,
+        vy: 0
+      };
 
-    const gravity = 0.8;
-    const friction = 0.8;
+      ground = {
+        x: 0,
+        y: height - 40,
+        width: 4000,
+        height: 40
+      };
 
-    const keys = {};
+      platforms.push(ground);
+      platforms.push({ x: 300, y: height - 120, width: 100, height: 20 });
+      platforms.push({ x: 450, y: height - 200, width: 100, height: 20 });
+      platforms.push({ x: 600, y: height - 280, width: 100, height: 20 });
+      platforms.push({ x: 800, y: height - 300, width: 300, height: 20 });
 
-    const platforms = [
-      { x: 0, y: 350, width: 2000, height: 50 },
-      { x: 200, y: 280, width: 120, height: 20 },
-      { x: 360, y: 240, width: 120, height: 20 },
-      { x: 560, y: 180, width: 120, height: 20 }
-    ];
-
-    let cameraX = 0;
-
-    document.addEventListener("keydown", e => keys[e.key] = true);
-    document.addEventListener("keyup", e => keys[e.key] = false);
-
-    function moveLeft() {
-      player.xVel = -5;
-    }
-
-    function moveRight() {
-      player.xVel = 5;
-    }
-
-    function jump() {
-      if (player.onGround) {
-        player.yVel = -12;
-        player.onGround = false;
-      }
-    }
-
-    function update() {
-      player.x += player.xVel;
-      player.y += player.yVel;
-      player.yVel += gravity;
-      player.xVel *= friction;
-
-      player.onGround = false;
-
-      platforms.forEach(p => {
-        if (
-          player.x < p.x + p.width &&
-          player.x + player.width > p.x &&
-          player.y + player.height < p.y + p.height &&
-          player.y + player.height + player.yVel >= p.y
-        ) {
-          player.y = p.y - player.height;
-          player.yVel = 0;
-          player.onGround = true;
-        }
-      });
-
-      if (keys["ArrowLeft"]) moveLeft();
-      if (keys["ArrowRight"]) moveRight();
-      if (keys["ArrowUp"]) jump();
-
-      cameraX = player.x - canvas.width / 2;
+      // Movable boxes
+      boxes.push({ x: 1200, y: height - 80, width: 40, height: 40, vx: 0, vy: 0 });
+      boxes.push({ x: 1300, y: height - 80, width: 40, height: 40, vx: 0, vy: 0 });
     }
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      ctx.translate(-cameraX, 0);
+      background("#d0f0c0");
 
-      // Draw platforms
-      ctx.fillStyle = "green";
-      platforms.forEach(p => {
-        ctx.fillRect(p.x, p.y, p.width, p.height);
-      });
+      cameraOffset = width / 2 - (player.x + player.width / 2);
+      translate(cameraOffset, 0);
 
-      // Draw bunny image
-      ctx.drawImage(bunnyImg, player.x, player.y, player.width, player.height);
+      // Draw ground/platforms
+      fill("#654321");
+      for (let plat of platforms) {
+        rect(plat.x, plat.y, plat.width, plat.height);
+      }
 
-      ctx.restore();
+      // Draw boxes
+      fill("#b5651d");
+      for (let box of boxes) {
+        rect(box.x, box.y, box.width, box.height);
+      }
+
+      // Apply gravity
+      player.vy += gravity;
+      player.y += player.vy;
+
+      // Horizontal movement
+      if (keys["ArrowRight"] || keys["d"]) player.vx = moveSpeed;
+      else if (keys["ArrowLeft"] || keys["a"]) player.vx = -moveSpeed;
+      else player.vx = 0;
+
+      player.x += player.vx;
+
+      // Platform collision
+      canJump = false;
+      for (let plat of platforms) {
+        if (
+          player.x < plat.x + plat.width &&
+          player.x + player.width > plat.x &&
+          player.y + player.height <= plat.y + 10 &&
+          player.y + player.height + player.vy >= plat.y
+        ) {
+          player.y = plat.y - player.height;
+          player.vy = 0;
+          canJump = true;
+        }
+      }
+
+      // Box collision and push
+      for (let box of boxes) {
+        box.vy += gravity;
+        box.y += box.vy;
+
+        for (let plat of platforms) {
+          if (
+            box.x < plat.x + plat.width &&
+            box.x + box.width > plat.x &&
+            box.y + box.height <= plat.y + 10 &&
+            box.y + box.height + box.vy >= plat.y
+          ) {
+            box.y = plat.y - box.height;
+            box.vy = 0;
+          }
+        }
+
+        // Push interaction
+        if (
+          player.x + player.width > box.x &&
+          player.x < box.x + box.width &&
+          player.y + player.height > box.y &&
+          player.y < box.y + box.height
+        ) {
+          if (player.vx > 0) box.x += moveSpeed;
+          else if (player.vx < 0) box.x -= moveSpeed;
+        }
+      }
+
+      // Draw bunny (simple design)
+      fill("#ffc0cb"); // bunny color
+      ellipse(player.x + player.width / 2, player.y + player.height / 2, player.width, player.height);
+      fill("white");
+      ellipse(player.x + player.width / 2 - 5, player.y + player.height / 2 - 20, 10, 20);
+      ellipse(player.x + player.width / 2 + 5, player.y + player.height / 2 - 20, 10, 20);
     }
 
-    function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
+    function keyPressed() {
+      keys[key] = true;
+      if ((key === "w" || keyCode === UP_ARROW) && canJump) {
+        player.vy = jumpPower;
+      }
     }
 
-    gameLoop();
+    function keyReleased() {
+      keys[key] = false;
+    }
   </script>
 </body>
 </html>
-
 
