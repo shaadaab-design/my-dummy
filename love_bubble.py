@@ -466,3 +466,16 @@ with open("bunny_platformer.html", 'r', encoding='utf-8') as f:
 st.markdown("## 🐰 Bunny Platformer Game")
 components.html(html_code, height=600, scrolling=False)
 
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="🌈 Rainbow Maze Escape", layout="wide")
+
+st.markdown("## 🌈 Platform Maze Escape")
+st.markdown("Touch rainbow tiles to escape... but some vanish after one step!")
+
+with open("rainbow_escape.html", 'r', encoding='utf-8') as f:
+    html_code = f.read()
+
+components.html(html_code, height=600, scrolling=False)
+
