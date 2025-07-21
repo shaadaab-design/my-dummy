@@ -767,6 +767,14 @@ import random
 
 st.set_page_config(page_title="Fortnite Aim Trainer", layout="centered")
 
+# Initialize session state safely
+if 'start_time' not in st.session_state:
+    st.session_state['start_time'] = None
+if 'score' not in st.session_state:
+    st.session_state['score'] = []
+if 'target_index' not in st.session_state:
+    st.session_state['target_index'] = random.randint(0, 8)
+
 # Styling
 st.markdown("""
     <style>
@@ -783,6 +791,11 @@ st.markdown("""
         .center-text {
             text-align: center;
         }
+        button {
+            height: 50px !important;
+            width: 50px !important;
+            font-size: 20px !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -790,38 +803,31 @@ st.markdown("<div class='game-box'>", unsafe_allow_html=True)
 
 st.title("🎯 Fortnite Aim Trainer")
 
-# Session state
-if 'start_time' not in st.session_state:
-    st.session_state.start_time = None
-if 'score' not in st.session_state:
-    st.session_state.score = []
-if 'target_index' not in st.session_state:
-    st.session_state.target_index = random.randint(0, 8)
-
 # Start game button
 if st.button("🎮 Start New Round"):
-    st.session_state.target_index = random.randint(0, 8)
-    st.session_state.start_time = time.time()
+    st.session_state['target_index'] = random.randint(0, 8)
+    st.session_state['start_time'] = time.time()
 
-# Show grid of buttons
+# Grid layout
 cols = st.columns(3)
 for i in range(9):
     with cols[i % 3]:
-        if i == st.session_state.target_index:
+        if i == st.session_state['target_index']:
             if st.button("🎯", key=f"target_{i}"):
-                reaction = time.time() - st.session_state.start_time
-                st.session_state.score.append(reaction)
-                st.success(f"Hit! Reaction time: {reaction:.3f} seconds")
+                if st.session_state['start_time'] is not None:
+                    reaction = time.time() - st.session_state['start_time']
+                    st.session_state['score'].append(reaction)
+                    st.success(f"Hit! Reaction time: {reaction:.3f} seconds")
         else:
             st.button(" ", key=f"blank_{i}")
 
-# Score display
-if st.session_state.score:
+# Show score
+if st.session_state['score']:
     st.markdown("---")
     st.write("Your last 5 reaction times:")
-    for i, s in enumerate(st.session_state.score[-5:], start=1):
+    for i, s in enumerate(st.session_state['score'][-5:], 1):
         st.write(f"Shot {i}: {s:.3f} sec")
-    st.write(f"Average: {sum(st.session_state.score[-5:]) / len(st.session_state.score[-5:]):.3f} sec")
+    avg = sum(st.session_state['score'][-5:]) / len(st.session_state['score'][-5:])
+    st.write(f"Average: {avg:.3f} sec")
 
 st.markdown("</div>", unsafe_allow_html=True)
-
