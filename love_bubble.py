@@ -469,34 +469,36 @@ components.html(html_code, height=600, scrolling=False)
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.title("🍓 Strawberry Dash Game")
-
-# Fullscreen toggle
-if st.button("🔲 Fullscreen"):
-    st.markdown("<script>document.documentElement.requestFullscreen()</script>", unsafe_allow_html=True)
-
 game_html = """
 <!DOCTYPE html>
 <html>
 <head>
 <style>
-  body {
+  html, body {
     margin: 0;
     overflow: hidden;
-    background: linear-gradient(to top, #ff9a9e, #fad0c4);
+    height: 100%;
+    background: linear-gradient(to top, #ff9a9e, #fad0c4, #fad0c4);
+  }
+
+  #game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
   }
 
   #game {
-    width: 100vw;
-    height: 100vh;
-    position: relative;
-    font-size: 30px;
-    font-family: 'Segoe UI', sans-serif;
-    overflow: hidden;
+    position: absolute;
+    width: 100%;
+    height: 10000px; /* Enough height for scrolling upward */
+    top: -9000px; /* Start close to the bottom */
   }
 
   .player {
     position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: 40px;
   }
 
@@ -507,30 +509,46 @@ game_html = """
   }
 
   #score {
-    position: absolute;
+    position: fixed;
     top: 10px;
     left: 10px;
     font-size: 20px;
     background: white;
     padding: 5px 15px;
     border-radius: 8px;
-    z-index: 2;
+    z-index: 999;
   }
 
   #hearts {
-    position: absolute;
+    position: fixed;
     top: 10px;
     right: 10px;
     font-size: 24px;
-    z-index: 2;
+    z-index: 999;
+  }
+
+  #fullscreen-btn {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    background: white;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 999;
   }
 </style>
 </head>
 <body>
-<div id="game">
+<div id="game-container">
   <div id="score">Score: 0</div>
   <div id="hearts">❤️❤️</div>
-  <div id="player" class="player">🍓</div>
+  <button id="fullscreen-btn">Fullscreen</button>
+  <div id="game">
+    <div id="player" class="player">🍓</div>
+  </div>
 </div>
 
 <script>
@@ -538,9 +556,9 @@ game_html = """
   const game = document.getElementById("game");
   const scoreDisplay = document.getElementById("score");
   const heartsDisplay = document.getElementById("hearts");
+  const gameContainer = document.getElementById("game-container");
   let posX = window.innerWidth / 2 - 20;
-  let posY = window.innerHeight - 60;
-  let scrollY = 0;
+  let posY = 9900; // Start near the bottom of #game
   let score = 0;
   let lives = 2;
   let speed = 3;
@@ -548,6 +566,11 @@ game_html = """
   function updatePosition() {
     player.style.left = posX + "px";
     player.style.top = posY + "px";
+
+    // Move camera with player if they go up
+    if (posY < window.scrollY + 300) {
+      window.scrollTo({ top: posY - 300, behavior: "smooth" });
+    }
   }
 
   function endGame() {
@@ -555,17 +578,29 @@ game_html = """
     location.reload();
   }
 
+  document.getElementById("fullscreen-btn").onclick = () => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    }
+  };
+
   document.addEventListener("keydown", function(event) {
     if (event.key === "ArrowLeft") posX -= 40;
     if (event.key === "ArrowRight") posX += 40;
     if (event.key === "ArrowUp") {
       posY -= 40;
-      scrollY += 40;
       score += 1;
       scoreDisplay.textContent = "Score: " + score;
-      game.style.backgroundPositionY = scrollY + "px";
     }
-    if (event.key === "ArrowDown") posY += 40;
+    if (event.key === "ArrowDown") {
+      posY += 40;
+    }
+
+    // Prevent going off screen
+    if (posX < 0) posX = 0;
+    if (posX > window.innerWidth - 40) posX = window.innerWidth - 40;
+    if (posY > 9950) posY = 9950; // Don't fall below floor
+
     updatePosition();
   });
 
@@ -574,19 +609,20 @@ game_html = """
     car.classList.add("car");
     car.textContent = "💔";
 
-    const direction = Math.floor(Math.random() * 4);
-    if (direction === 0) { // from top
-      car.style.left = Math.random() * window.innerWidth + "px";
-      car.style.top = "-40px";
-    } else if (direction === 1) { // from bottom
-      car.style.left = Math.random() * window.innerWidth + "px";
-      car.style.top = window.innerHeight + "px";
-    } else if (direction === 2) { // from left
-      car.style.left = "-40px";
-      car.style.top = Math.random() * window.innerHeight + "px";
-    } else { // from right
-      car.style.left = window.innerWidth + "px";
-      car.style.top = Math.random() * window.innerHeight + "px";
+    const direction = Math.floor(Math.random() * 4); // 0: left, 1: right, 2: top, 3: bottom
+    let fromLeft = direction === 0;
+    let fromRight = direction === 1;
+    let fromTop = direction === 2;
+    let fromBottom = direction === 3;
+
+    const carY = posY - Math.random() * 500 + 250;
+
+    if (fromLeft || fromRight) {
+      car.style.top = carY + "px";
+      car.style.left = fromLeft ? "-50px" : window.innerWidth + "px";
+    } else {
+      car.style.left = Math.random() * (window.innerWidth - 50) + "px";
+      car.style.top = fromTop ? (carY - 400) + "px" : (carY + 400) + "px";
     }
 
     game.appendChild(car);
@@ -595,15 +631,18 @@ game_html = """
       let cx = car.offsetLeft;
       let cy = car.offsetTop;
 
-      if (direction === 0) car.style.top = cy + speed + "px";
-      if (direction === 1) car.style.top = cy - speed + "px";
-      if (direction === 2) car.style.left = cx + speed + "px";
-      if (direction === 3) car.style.left = cx - speed + "px";
+      if (fromLeft) car.style.left = (cx + speed) + "px";
+      else if (fromRight) car.style.left = (cx - speed) + "px";
+      else if (fromTop) car.style.top = (cy + speed) + "px";
+      else if (fromBottom) car.style.top = (cy - speed) + "px";
 
       const px = player.offsetLeft;
       const py = player.offsetTop;
 
-      if (Math.abs(px - car.offsetLeft) < 30 && Math.abs(py - car.offsetTop) < 30) {
+      if (
+        Math.abs(px - car.offsetLeft) < 30 &&
+        Math.abs(py - car.offsetTop) < 30
+      ) {
         lives -= 1;
         heartsDisplay.innerText = "❤️".repeat(lives);
         car.remove();
@@ -611,19 +650,24 @@ game_html = """
         if (lives <= 0) endGame();
       }
 
-      if (cy > window.innerHeight + 50 || cy < -50 || cx > window.innerWidth + 50 || cx < -50) {
+      // Remove car if it's off screen
+      if (
+        cx < -100 || cx > window.innerWidth + 100 ||
+        cy < posY - 1000 || cy > posY + 1000
+      ) {
         car.remove();
         clearInterval(move);
       }
     }, 10);
   }
 
-  setInterval(createCar, 800);
+  setInterval(createCar, 1000);
   updatePosition();
 </script>
 </body>
 </html>
 """
 
-components.html(game_html, height=700)
+components.html(game_html, height=700, scrolling=True)
+
 
