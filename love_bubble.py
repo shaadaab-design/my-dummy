@@ -469,13 +469,12 @@ components.html(html_code, height=600, scrolling=False)
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="🌈 Rainbow Maze Escape", layout="wide")
+st.set_page_config(page_title="🌀 Maze Marble Tilt", layout="centered")
+st.markdown("## 🌀 Maze Marble Tilt")
+st.markdown("Tilt your device or use arrow keys to guide the marble through the maze!")
 
-st.markdown("## 🌈 Platform Maze Escape")
-st.markdown("Touch rainbow tiles to escape... but some vanish after one step!")
+with open("maze_tilt.html", 'r', encoding='utf-8') as f:
+    html = f.read()
 
-with open("rainbow_escape.html", 'r', encoding='utf-8') as f:
-    html_code = f.read()
-
-components.html(html_code, height=600, scrolling=False)
+components.html(html, height=420, scrolling=False)
 
