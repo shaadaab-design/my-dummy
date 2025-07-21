@@ -469,196 +469,133 @@ components.html(html_code, height=600, scrolling=False)
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="🌈 Rolling Ball Escape", layout="wide")
+st.set_page_config(page_title="Rainbow Road Hop", layout="centered")
+st.markdown("## 🌈 Rainbow Road Hop")
+st.markdown("Use arrow keys (or buttons) to move. Dodge the hearts. Push forward!")
 
-st.markdown("""
-    <h1 style='text-align: center; color: #ff00aa;'>🌈 Rolling Ball Platform Escape</h1>
-    <p style='text-align: center;'>Use arrow keys or WASD to roll the ball. Some platforms vanish after one touch... Good luck 💖</p>
-""", unsafe_allow_html=True)
-
-game_code = """
+game_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Rolling Ball Platform Escape</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Rainbow Road Hop</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: linear-gradient(45deg, #ffc0cb, #add8e6, #90ee90, #fffacd, #dda0dd);
-      background-size: 400% 400%;
-      animation: gradient 10s ease infinite;
+    body { margin:0; overflow:hidden; }
+    canvas { display:block; background:#111; margin:auto; }
+    #controls {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      z-index: 999;
     }
-
-    canvas {
-      display: block;
-    }
-
-    @keyframes gradient {
-      0% { background-position: 0% 50% }
-      50% { background-position: 100% 50% }
-      100% { background-position: 0% 50% }
+    .btn {
+      padding: 10px 15px;
+      margin:0 5px;
+      font-size: 24px;
+      border:none;
+      border-radius: 5px;
+      background: #ff69b4;
+      color:#fff;
+      user-select:none;
     }
   </style>
 </head>
 <body>
-  <canvas id="game"></canvas>
+  <canvas id="gameCanvas"></canvas>
+  <div id="controls">
+    <button class="btn" onclick="move(-1,0)">◀️</button>
+    <button class="btn" onclick="move(0,1)">🔼</button>
+    <button class="btn" onclick="move(1,0)">▶️</button>
+  </div>
   <script>
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const cols = 7, rows = 10;
+    let tileW, tileH;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const player = { x: 3, y: rows - 1, r: 0.35, color: "#00ffcc" };
+    let hearts = [];
+    let frame = 0;
 
-    const tileSize = 60;
-    const rows = 10;
-    const cols = 12;
-
-    let platforms = [];
-    let touchedTiles = {};
-
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        if (Math.random() > 0.3) {
-          platforms.push({ x, y });
-        }
-      }
+    function resize() {
+      canvas.width = window.innerWidth;
+      tileW = canvas.width / cols;
+      tileH = window.innerHeight * 0.8 / rows;
+      canvas.height = tileH * rows;
     }
+    window.addEventListener("resize", resize);
+    resize();
 
-    const player = {
-      x: 1,
-      y: 1,
-      color: '#ff69b4',
-      radius: tileSize / 3,
-    };
-
-    document.addEventListener('keydown', (e) => {
-      let nx = player.x;
-      let ny = player.y;
-
-      if (e.key === 'ArrowUp' || e.key === 'w') ny--;
-      if (e.key === 'ArrowDown' || e.key === 's') ny++;
-      if (e.key === 'ArrowLeft' || e.key === 'a') nx--;
-      if (e.key === 'ArrowRight' || e.key === 'd') nx++;
-
-      if (isValidMove(nx, ny)) {
-        const key = nx + ',' + ny;
-        if (!touchedTiles[key]) {
-          touchedTiles[key] = 1;
-        } else {
-          // If touched once already, remove the tile
-          platforms = platforms.filter(p => !(p.x === nx && p.y === ny));
-        }
-        player.x = nx;
-        player.y = ny;
+    function spawnHearts() {
+      hearts = hearts.filter(h => h.y < rows);
+      if (frame % 40 === 0) {
+        const row = Math.floor(Math.random() * (rows - 2)) + 1;
+        const dir = Math.random() < 0.5 ? -1 : 1;
+        const startX = dir < 0 ? cols : -1;
+        hearts.push({ x: startX, y: row, dir, speed: 0.05 + Math.random() * 0.1 });
       }
-    });
-
-    function isValidMove(x, y) {
-      return platforms.some(p => p.x === x && p.y === y);
     }
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      platforms.forEach(p => {
-        const rainbow = ['#ff69b4', '#ff4500', '#ffff00', '#00ff00', '#00ced1', '#1e90ff', '#9400d3'];
-        const color = rainbow[(p.x + p.y) % rainbow.length];
-        ctx.fillStyle = color;
-        ctx.fillRect(p.x * tileSize, p.y * tileSize, tileSize, tileSize);
+      ctx.fillStyle = "#111"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < rows; y++) {
+        ctx.fillStyle = `hsl(${y/rows*360}, 70%, 30%)`;
+        ctx.fillRect(0, y * tileH, canvas.width, tileH - 2);
+      }
+      hearts.forEach(h => {
+        ctx.fillStyle = "#ff69b4";
+        ctx.beginPath();
+        ctx.arc((h.x + 0.5) * tileW, (h.y + 0.5) * tileH, Math.min(tileW, tileH) * 0.4, 0, Math.PI * 2);
+        ctx.fill();
       });
-
-      ctx.beginPath();
-      ctx.arc(player.x * tileSize + tileSize / 2, player.y * tileSize + tileSize / 2, player.radius, 0, Math.PI * 2);
       ctx.fillStyle = player.color;
+      ctx.beginPath();
+      ctx.arc((player.x + 0.5) * tileW, (player.y + 0.5) * tileH, Math.min(tileW, tileH) * player.r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.closePath();
-
-      requestAnimationFrame(draw);
     }
 
-    draw();
+    function update() {
+      frame++;
+      spawnHearts();
+      hearts.forEach(h => h.x += h.dir * h.speed);
+      if (playerMoved) playerMoved = false;
+      hearts.forEach(h => {
+        if (h.y === player.y && Math.abs(h.x - player.x) < 0.8) endGame();
+      });
+      draw();
+      if (!gameOver) requestAnimationFrame(update);
+    }
+
+    let gameOver = false, playerMoved = false;
+    function move(dx, dy) {
+      if (gameOver) return;
+      player.x = Math.min(cols-1, Math.max(0, player.x + dx));
+      player.y = Math.min(rows-1, Math.max(0, player.y - dy));
+      playerMoved = true;
+      if (player.y === 0) endGame(true);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") move(-1,0);
+      if (e.key === "ArrowRight") move(1,0);
+      if (e.key === "ArrowUp") move(0,1);
+    });
+
+    function endGame(win) {
+      gameOver = true;
+      setTimeout(() => {
+        alert(win ? "YOU REACHED THE RAINBOW!!! 🌈" : "💔 Hit by a heart!");
+        document.location.reload();
+      }, 50);
+    }
+
+    update();
   </script>
 </body>
 </html>
 """
 
-components.html(game_code, height=700)
-
-import streamlit as st
-import streamlit.components.v1 as components
-
-st.set_page_config(page_title="Catch the Rainbow 🌈", layout="wide")
-
-st.title("🌈 Catch the Rainbow!")
-st.markdown("Click the rainbows before they fall! 🖱️")
-
-game_code = """
-<html>
-  <body style="margin:0; overflow:hidden;">
-    <canvas id="gameCanvas" width="800" height="500" style="border:1px solid #ccc;"></canvas>
-    <script>
-      const canvas = document.getElementById("gameCanvas");
-      const ctx = canvas.getContext("2d");
-
-      let rainbow = { x: Math.random() * 750, y: 0, size: 50 };
-      let score = 0;
-
-      function drawRainbow() {
-        const gradient = ctx.createLinearGradient(0, 0, rainbow.size, 0);
-        gradient.addColorStop(0, "red");
-        gradient.addColorStop(0.2, "orange");
-        gradient.addColorStop(0.4, "yellow");
-        gradient.addColorStop(0.6, "green");
-        gradient.addColorStop(0.8, "blue");
-        gradient.addColorStop(1, "violet");
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(rainbow.x, rainbow.y, rainbow.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      function drawScore() {
-        ctx.fillStyle = "black";
-        ctx.font = "20px Arial";
-        ctx.fillText("Score: " + score, 10, 30);
-      }
-
-      function update() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawRainbow();
-        drawScore();
-        rainbow.y += 2;
-
-        if (rainbow.y > canvas.height) {
-          rainbow.x = Math.random() * 750;
-          rainbow.y = 0;
-        }
-
-        requestAnimationFrame(update);
-      }
-
-      canvas.addEventListener("click", function (e) {
-        const dx = e.offsetX - rainbow.x;
-        const dy = e.offsetY - rainbow.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < rainbow.size / 2) {
-          score++;
-          rainbow.x = Math.random() * 750;
-          rainbow.y = 0;
-        }
-      });
-
-      update();
-    </script>
-  </body>
-</html>
-"""
-
-# Embed it in the Streamlit page
-components.html(game_code, height=520)
+components.html(game_html, height=window.innerHeight if False else 800, scrolling=False)
 
