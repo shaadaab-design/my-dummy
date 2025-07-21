@@ -670,4 +670,90 @@ game_html = """
 
 components.html(game_html, height=700, scrolling=True)
 
+import streamlit as st
+import random
+import time
+
+st.set_page_config(page_title="🎯 Reaction Time Trainer", layout="centered")
+
+# Available colors
+colors = {
+    "Red": "#FF4B4B",
+    "Blue": "#4B7BFF",
+    "Green": "#4BFF62",
+    "Yellow": "#FFF94B",
+    "Purple": "#C14BFF",
+    "Orange": "#FFA54B"
+}
+
+# Game state
+if "start_time" not in st.session_state:
+    st.session_state.start_time = None
+if "target_color" not in st.session_state:
+    st.session_state.target_color = None
+if "show_buttons" not in st.session_state:
+    st.session_state.show_buttons = False
+if "reaction_time" not in st.session_state:
+    st.session_state.reaction_time = None
+if "round_active" not in st.session_state:
+    st.session_state.round_active = False
+
+# Function to start a new round
+def start_round():
+    st.session_state.reaction_time = None
+    st.session_state.round_active = False
+    st.session_state.target_color = random.choice(list(colors.keys()))
+    st.session_state.show_buttons = False
+    time.sleep(1)
+    st.write("Get ready...")
+    time.sleep(1)
+    st.write("3...")
+    time.sleep(1)
+    st.write("2...")
+    time.sleep(1)
+    st.write("1...")
+    time.sleep(0.5)
+    st.session_state.show_buttons = True
+    st.session_state.start_time = time.time()
+    st.session_state.round_active = True
+
+# Title
+st.title("🎯 Reaction Time Trainer")
+st.markdown("Click the color that matches the word **as fast as possible** after the countdown!")
+
+# Start button
+if st.button("Start New Round 🎮"):
+    start_round()
+
+# Show color prompt
+if st.session_state.target_color:
+    st.markdown(f"### Select: **:rainbow[{st.session_state.target_color}]**")
+
+# Show colored buttons
+if st.session_state.show_buttons:
+    cols = st.columns(len(colors))
+    for i, (color_name, hex_code) in enumerate(colors.items()):
+        with cols[i]:
+            if st.button(" ", key=color_name, help=color_name):
+                btn_style = f"background-color:{hex_code};height:80px;width:80px;border-radius:10px;border:none;"
+                st.markdown(f"""
+                    <style>
+                    div[data-testid="stButton"] button[title="{color_name}"] {{{btn_style}}}
+                    </style>
+                """, unsafe_allow_html=True)
+
+                if st.session_state.round_active:
+                    st.session_state.round_active = False
+                    st.session_state.show_buttons = False
+                    reaction_time = time.time() - st.session_state.start_time
+                    if color_name == st.session_state.target_color:
+                        st.success(f"✅ Correct! Reaction time: **{reaction_time:.3f} seconds**")
+                    else:
+                        st.error(f"❌ Wrong color! That was **{color_name}**.\n\nTarget was **{st.session_state.target_color}**.")
+                    st.session_state.reaction_time = reaction_time
+
+# Show reaction time (if available)
+if st.session_state.reaction_time:
+    st.markdown("---")
+    st.metric("⏱️ Your Reaction Time", f"{st.session_state.reaction_time:.3f} sec")
 
