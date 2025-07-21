@@ -1,126 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Bunny Bounce: The Floating Ruins</title>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+  <meta charset="UTF-8">
+  <title>Bunny Parkour</title>
   <style>
-    body { margin: 0; overflow: hidden; background: #d0f4ff; }
-    #mobile-controls {
+    canvas { display: block; margin: auto; background: #cce6ff; }
+    #controls {
       position: absolute;
       bottom: 20px;
-      left: 20px;
-      z-index: 10;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
     }
     .btn {
-      width: 60px; height: 60px; margin: 5px;
-      background: rgba(255, 255, 255, 0.6);
-      border: 2px solid #000;
+      width: 60px;
+      height: 60px;
+      background: rgba(0,0,0,0.3);
+      border: none;
       border-radius: 10px;
       font-size: 24px;
-      font-weight: bold;
-      cursor: pointer;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <div id="mobile-controls">
-    <button class="btn" onclick="left = true" onmouseup="left = false">←</button>
-    <button class="btn" onclick="right = true" onmouseup="right = false">→</button>
-    <button class="btn" onclick="jump = true" onmouseup="jump = false">↑</button>
+  <canvas id="game"></canvas>
+  <div id="controls">
+    <button class="btn" id="left">⬅️</button>
+    <button class="btn" id="jump">⬆️</button>
+    <button class="btn" id="right">➡️</button>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
   <script>
-    let left = false, right = false, jump = false;
-
     const config = {
       type: Phaser.AUTO,
       width: 800,
       height: 600,
       physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 800 }, debug: false }
+        arcade: {
+          gravity: { y: 1000 },
+          debug: false
+        }
       },
       scene: {
-        preload: preload,
-        create: create,
-        update: update
+        preload,
+        create,
+        update
       }
     };
 
     const game = new Phaser.Game(config);
 
-    let player, cursors, platforms, crates, jumpPads;
+    let player, cursors, platforms, camera;
+    let moveLeft = false, moveRight = false, jumping = false;
 
     function preload() {
-      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky4.png');
-      this.load.image('ground', 'https://labs.phaser.io/assets/platforms/platform.png');
-      this.load.image('crate', 'https://labs.phaser.io/assets/sprites/crate.png');
-      this.load.image('jumpPad', 'https://labs.phaser.io/assets/sprites/mushroom16.png');
-      this.load.spritesheet('bunny', 'https://labs.phaser.io/assets/sprites/bunny.png', { frameWidth: 32, frameHeight: 32 });
+      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky1.png');
+      this.load.image('ground', 'https://labs.phaser.io/assets/platform.png');
+      this.load.image('bunny', 'https://labs.phaser.io/assets/sprites/rabbit.png');
     }
 
     function create() {
-      this.add.image(400, 300, 'sky');
+      this.add.image(400, 300, 'sky').setScrollFactor(0);
 
       platforms = this.physics.add.staticGroup();
       platforms.create(400, 580, 'ground').setScale(2).refreshBody();
-      platforms.create(600, 450, 'ground');
-      platforms.create(50, 350, 'ground');
-      platforms.create(750, 220, 'ground');
+
+      // Add parkour platforms
+      platforms.create(300, 500, 'ground');
+      platforms.create(550, 400, 'ground');
+      platforms.create(250, 300, 'ground');
+      platforms.create(650, 200, 'ground');
 
       player = this.physics.add.sprite(100, 450, 'bunny');
       player.setBounce(0.2);
       player.setCollideWorldBounds(true);
 
-      this.anims.create({
-        key: 'left', frames: this.anims.generateFrameNumbers('bunny', { start: 0, end: 1 }), frameRate: 10, repeat: -1
-      });
-      this.anims.create({
-        key: 'turn', frames: [ { key: 'bunny', frame: 0 } ], frameRate: 20
-      });
-      this.anims.create({
-        key: 'right', frames: this.anims.generateFrameNumbers('bunny', { start: 1, end: 0 }), frameRate: 10, repeat: -1
-      });
+      this.physics.add.collider(player, platforms);
 
+      // Camera follows player
+      this.cameras.main.startFollow(player);
+      this.cameras.main.setBounds(0, 0, 800, 600);
+
+      // Keyboard
       cursors = this.input.keyboard.createCursorKeys();
 
-      crates = this.physics.add.group({ allowGravity: true, immovable: false });
-      crates.create(500, 500, 'crate');
-      crates.create(700, 400, 'crate');
-
-      jumpPads = this.physics.add.staticGroup();
-      jumpPads.create(150, 520, 'jumpPad');
-      jumpPads.create(750, 190, 'jumpPad');
-
-      this.physics.add.collider(player, platforms);
-      this.physics.add.collider(crates, platforms);
-      this.physics.add.collider(player, crates);
-      this.physics.add.collider(crates, crates);
-
-      this.physics.add.overlap(player, jumpPads, (player, pad) => {
-        player.setVelocityY(-500);
-      }, null, this);
+      // Mobile Buttons
+      document.getElementById('left').addEventListener('touchstart', () => moveLeft = true);
+      document.getElementById('left').addEventListener('touchend', () => moveLeft = false);
+      document.getElementById('right').addEventListener('touchstart', () => moveRight = true);
+      document.getElementById('right').addEventListener('touchend', () => moveRight = false);
+      document.getElementById('jump').addEventListener('touchstart', () => {
+        if (player.body.touching.down) {
+          player.setVelocityY(-500);
+        }
+      });
     }
 
     function update() {
-      const isLeft = cursors.left.isDown || left;
-      const isRight = cursors.right.isDown || right;
-      const isJump = cursors.up.isDown || jump;
-
-      if (isLeft) {
-        player.setVelocityX(-160);
-        player.anims.play('left', true);
-      } else if (isRight) {
-        player.setVelocityX(160);
-        player.anims.play('right', true);
+      if (cursors.left.isDown || moveLeft) {
+        player.setVelocityX(-200);
+      } else if (cursors.right.isDown || moveRight) {
+        player.setVelocityX(200);
       } else {
         player.setVelocityX(0);
-        player.anims.play('turn');
       }
 
-      if (isJump && player.body.touching.down) {
-        player.setVelocityY(-330);
+      if ((cursors.up.isDown || jumping) && player.body.touching.down) {
+        player.setVelocityY(-500);
       }
     }
   </script>
