@@ -685,9 +685,9 @@ EMOJI_MAP = {
     "orange": "🧡"
 }
 
-color_list = list(EMOJI_MAP.keys())
+original_colors = list(EMOJI_MAP.keys())
 
-# Store game state in session state
+# Game state setup
 if "game_started" not in st.session_state:
     st.session_state.game_started = False
 if "target_color" not in st.session_state:
@@ -698,21 +698,23 @@ if "reaction_time" not in st.session_state:
     st.session_state.reaction_time = None
 if "score" not in st.session_state:
     st.session_state.score = 0
+if "shuffled_colors" not in st.session_state:
+    st.session_state.shuffled_colors = random.sample(original_colors, len(original_colors))
 
 with st.container():
     st.markdown("### 🕹️ How to Play:")
     st.markdown("- Click 'Start Game' to begin.")
-    st.markdown("- Wait for the countdown (3...2...1...) and then select the correct heart emoji that matches the color shown.")
-    st.markdown("- The faster you click, the better your reaction time!")
-
+    st.markdown("- Wait for the countdown (3...2...1...) and then select the correct heart emoji.")
+    st.markdown("- The color order changes every round, so stay sharp! 🔁")
     st.divider()
 
     with st.container(border=True):
         if not st.session_state.game_started:
             if st.button("🚀 Start Game"):
                 st.session_state.game_started = True
-                st.session_state.target_color = random.choice(color_list)
+                st.session_state.target_color = random.choice(original_colors)
                 st.session_state.reaction_time = None
+                st.session_state.shuffled_colors = random.sample(original_colors, len(original_colors))
                 for i in range(3, 0, -1):
                     st.markdown(f"### ⏳ Get ready... {i}")
                     time.sleep(1)
@@ -723,9 +725,9 @@ with st.container():
                 st.markdown(f"### ✳️ Match This Color: **{st.session_state.target_color.upper()}**")
 
                 cols = st.columns(len(EMOJI_MAP))
-                for i, color in enumerate(color_list):
+                for i, color in enumerate(st.session_state.shuffled_colors):
                     with cols[i]:
-                        if st.button(EMOJI_MAP[color], key=color):
+                        if st.button(EMOJI_MAP[color], key=color + str(random.random())):
                             end_time = time.time()
                             st.session_state.reaction_time = round(end_time - st.session_state.start_time, 3)
                             if color == st.session_state.target_color:
@@ -748,6 +750,3 @@ with st.container():
                         st.session_state.score = 0
                         st.session_state.game_started = False
                         st.rerun()
-
-
-
