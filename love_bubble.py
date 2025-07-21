@@ -702,7 +702,7 @@ if "shuffled_colors" not in st.session_state:
     st.session_state.shuffled_colors = random.sample(original_colors, len(original_colors))
 
 with st.container():
-    st.markdown("### 🕹️ How to Play:")
+    st.markdown("### COME HERE LIL BABY THIS IS  How to Play:")
     st.markdown("- Click 'Start Game' to begin.")
     st.markdown("- Wait for the countdown (3...2...1...) and then select the correct heart emoji.")
     st.markdown("- The color order changes every round, so stay sharp! 🔁")
@@ -742,7 +742,7 @@ with st.container():
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    if st.button("🎮 Play Again"):
+                    if st.button(" mhmm wana Play Again"):
                         st.session_state.game_started = False
                         st.rerun()
                 with col2:
