@@ -1,118 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Bunny Parkour</title>
-  <style>
-    canvas { display: block; margin: auto; background: #cce6ff; }
-    #controls {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-    }
-    .btn {
-      width: 60px;
-      height: 60px;
-      background: rgba(0,0,0,0.3);
-      border: none;
-      border-radius: 10px;
-      font-size: 24px;
-      color: white;
-    }
-  </style>
-</head>
-<body>
-  <canvas id="game"></canvas>
-  <div id="controls">
-    <button class="btn" id="left">⬅️</button>
-    <button class="btn" id="jump">⬆️</button>
-    <button class="btn" id="right">➡️</button>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-  <script>
-    const config = {
-      type: Phaser.AUTO,
-      width: 800,
-      height: 600,
-      physics: {
-        default: 'arcade',
-        arcade: {
-          gravity: { y: 1000 },
-          debug: false
-        }
-      },
-      scene: {
-        preload,
-        create,
-        update
+<html>
+  <head>
+    <title>Bunny Platformer</title>
+    <script src="https://unpkg.com/aframe@1.4.2/dist/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+    <style>
+      .controls {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 999;
       }
-    };
+      .btn {
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 10px;
+        font-weight: bold;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <div class="btn" onclick="moveLeft()">←</div>
+      <div class="btn" onclick="jump()">↑</div>
+      <div class="btn" onclick="moveRight()">→</div>
+    </div>
 
-    const game = new Phaser.Game(config);
+    <a-scene physics="gravity: -9.8;" embedded>
 
-    let player, cursors, platforms, camera;
-    let moveLeft = false, moveRight = false, jumping = false;
+      <!-- Ground -->
+      <a-box position="0 0 -5" width="30" height="0.5" depth="30" color="#8BC34A" static-body></a-box>
 
-    function preload() {
-      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky1.png');
-      this.load.image('ground', 'https://labs.phaser.io/assets/platform.png');
-      this.load.image('bunny', 'https://labs.phaser.io/assets/sprites/rabbit.png');
-    }
+      <!-- Parkour Platforms -->
+      <a-box position="2 1 -3" width="2" height="0.5" depth="2" color="#FFC107" static-body></a-box>
+      <a-box position="6 2 -3" width="2" height="0.5" depth="2" color="#FFC107" static-body></a-box>
+      <a-box position="10 3 -3" width="2" height="0.5" depth="2" color="#FFC107" static-body></a-box>
+      <a-box position="14 4 -3" width="2" height="0.5" depth="2" color="#FFC107" static-body></a-box>
 
-    function create() {
-      this.add.image(400, 300, 'sky').setScrollFactor(0);
+      <!-- Movable Box -->
+      <a-box position="5 5 -3" width="1" height="1" depth="1" color="#FF5722" dynamic-body></a-box>
 
-      platforms = this.physics.add.staticGroup();
-      platforms.create(400, 580, 'ground').setScale(2).refreshBody();
+      <!-- Player Bunny -->
+      <a-entity id="player" position="0 2 -3" dynamic-body="mass: 1; shape: box;">
+        <a-box id="bunny" width="1" height="1" depth="1" color="#FFF"></a-box>
+        <!-- Optionally replace with a GLB model if available -->
+        <!-- <a-gltf-model src="bunny.glb" scale="0.5 0.5 0.5"></a-gltf-model> -->
+      </a-entity>
 
-      // Add parkour platforms
-      platforms.create(300, 500, 'ground');
-      platforms.create(550, 400, 'ground');
-      platforms.create(250, 300, 'ground');
-      platforms.create(650, 200, 'ground');
+      <!-- Camera -->
+      <a-entity 
+        id="cameraRig"
+        position="0 4 5"
+        rotation="0 0 0"
+        camera
+        look-controls="enabled: false"
+        wasd-controls="enabled: false">
+      </a-entity>
 
-      player = this.physics.add.sprite(100, 450, 'bunny');
-      player.setBounce(0.2);
-      player.setCollideWorldBounds(true);
+      <!-- Lighting -->
+      <a-entity light="type: directional; color: #FFF; intensity: 1" position="5 10 0"></a-entity>
+      <a-sky color="#87CEEB"></a-sky>
 
-      this.physics.add.collider(player, platforms);
+    </a-scene>
 
-      // Camera follows player
-      this.cameras.main.startFollow(player);
-      this.cameras.main.setBounds(0, 0, 800, 600);
+    <script>
+      const player = document.querySelector("#player");
+      const cam = document.querySelector("#cameraRig");
 
-      // Keyboard
-      cursors = this.input.keyboard.createCursorKeys();
+      function moveLeft() {
+        player.body.velocity.x = -3;
+      }
 
-      // Mobile Buttons
-      document.getElementById('left').addEventListener('touchstart', () => moveLeft = true);
-      document.getElementById('left').addEventListener('touchend', () => moveLeft = false);
-      document.getElementById('right').addEventListener('touchstart', () => moveRight = true);
-      document.getElementById('right').addEventListener('touchend', () => moveRight = false);
-      document.getElementById('jump').addEventListener('touchstart', () => {
-        if (player.body.touching.down) {
-          player.setVelocityY(-500);
+      function moveRight() {
+        player.body.velocity.x = 3;
+      }
+
+      function jump() {
+        if (Math.abs(player.body.velocity.y) < 0.05) {
+          player.body.velocity.y = 5;
         }
+      }
+
+      // Camera follow logic
+      AFRAME.registerComponent("follow-player", {
+        tick: function () {
+          const playerPos = player.object3D.position;
+          cam.setAttribute("position", {
+            x: playerPos.x,
+            y: playerPos.y + 3,
+            z: playerPos.z + 6,
+          });
+        },
       });
-    }
 
-    function update() {
-      if (cursors.left.isDown || moveLeft) {
-        player.setVelocityX(-200);
-      } else if (cursors.right.isDown || moveRight) {
-        player.setVelocityX(200);
-      } else {
-        player.setVelocityX(0);
-      }
-
-      if ((cursors.up.isDown || jumping) && player.body.touching.down) {
-        player.setVelocityY(-500);
-      }
-    }
-  </script>
-</body>
+      document.querySelector("a-scene").addEventListener("loaded", () => {
+        cam.setAttribute("follow-player", "");
+      });
+    </script>
+  </body>
 </html>
