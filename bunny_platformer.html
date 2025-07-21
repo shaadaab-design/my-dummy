@@ -1,147 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>Bunny Platformer</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <title>Cloud Climber Bunny</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
   <style>
-    body { margin: 0; overflow: hidden; background-color: #d0f0c0; }
-    canvas { display: block; }
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    #game-container {
+      width: 100%;
+      height: 100vh;
+    }
+    .mobile-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99;
+      display: flex;
+      gap: 20px;
+    }
+    .mobile-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 50%;
+      font-size: 30px;
+      text-align: center;
+      line-height: 60px;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
+  <div id="game-container"></div>
+  <div class="mobile-controls">
+    <div class="mobile-btn" id="left">⭠</div>
+    <div class="mobile-btn" id="right">⭢</div>
+    <div class="mobile-btn" id="jump">⭡</div>
+  </div>
+
   <script>
-    let player;
-    let ground;
-    let platforms = [];
-    let gravity = 1;
-    let jumpPower = -15;
-    let moveSpeed = 5;
-    let canJump = false;
-    let keys = {};
-    let boxes = [];
-    let cameraOffset = 0;
+    const config = {
+      type: Phaser.AUTO,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      parent: 'game-container',
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 600 },
+          debug: false
+        }
+      },
+      scene: {
+        preload,
+        create,
+        update
+      }
+    };
 
-    function setup() {
-      createCanvas(windowWidth, 600);
+    let player, cursors, platforms, movingPlatforms, disappearingClouds, crates, camera;
+    let leftPressed = false, rightPressed = false, jumpPressed = false;
 
-      player = {
-        x: 50,
-        y: 100,
-        width: 40,
-        height: 40,
-        vx: 0,
-        vy: 0
-      };
+    const game = new Phaser.Game(config);
 
-      ground = {
-        x: 0,
-        y: height - 40,
-        width: 4000,
-        height: 40
-      };
-
-      platforms.push(ground);
-      platforms.push({ x: 300, y: height - 120, width: 100, height: 20 });
-      platforms.push({ x: 450, y: height - 200, width: 100, height: 20 });
-      platforms.push({ x: 600, y: height - 280, width: 100, height: 20 });
-      platforms.push({ x: 800, y: height - 300, width: 300, height: 20 });
-
-      // Movable boxes
-      boxes.push({ x: 1200, y: height - 80, width: 40, height: 40, vx: 0, vy: 0 });
-      boxes.push({ x: 1300, y: height - 80, width: 40, height: 40, vx: 0, vy: 0 });
+    function preload() {
+      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky4.png');
+      this.load.image('cloud', 'https://labs.phaser.io/assets/sprites/platform.png');
+      this.load.image('crate', 'https://labs.phaser.io/assets/sprites/crate.png');
+      this.load.image('bunny', 'https://labs.phaser.io/assets/sprites/rabbit.png');
     }
 
-    function draw() {
-      background("#d0f0c0");
+    function create() {
+      this.add.image(400, 300, 'sky').setScale(2);
+      platforms = this.physics.add.staticGroup();
+      disappearingClouds = this.physics.add.group();
+      movingPlatforms = this.physics.add.group();
+      crates = this.physics.add.group({ allowGravity: true, immovable: false });
 
-      cameraOffset = width / 2 - (player.x + player.width / 2);
-      translate(cameraOffset, 0);
+      // Create base ground
+      platforms.create(400, 590, 'cloud').setScale(2).refreshBody();
 
-      // Draw ground/platforms
-      fill("#654321");
-      for (let plat of platforms) {
-        rect(plat.x, plat.y, plat.width, plat.height);
-      }
+      // Static clouds
+      platforms.create(300, 500, 'cloud');
+      platforms.create(600, 420, 'cloud');
+      platforms.create(100, 340, 'cloud');
+      platforms.create(400, 260, 'cloud');
 
-      // Draw boxes
-      fill("#b5651d");
-      for (let box of boxes) {
-        rect(box.x, box.y, box.width, box.height);
-      }
+      // Disappearing clouds
+      disappearingClouds.create(200, 180, 'cloud');
+      disappearingClouds.create(500, 100, 'cloud');
 
-      // Apply gravity
-      player.vy += gravity;
-      player.y += player.vy;
+      // Moving cloud
+      const moving = movingPlatforms.create(400, 200, 'cloud');
+      moving.body.velocity.x = 50;
+      moving.setImmovable(true);
 
-      // Horizontal movement
-      if (keys["ArrowRight"] || keys["d"]) player.vx = moveSpeed;
-      else if (keys["ArrowLeft"] || keys["a"]) player.vx = -moveSpeed;
-      else player.vx = 0;
+      // Crate to move
+      const crate = crates.create(300, 460, 'crate');
+      crate.setCollideWorldBounds(true);
 
-      player.x += player.vx;
+      player = this.physics.add.sprite(100, 520, 'bunny');
+      player.setBounce(0.1);
+      player.setCollideWorldBounds(true);
 
-      // Platform collision
-      canJump = false;
-      for (let plat of platforms) {
-        if (
-          player.x < plat.x + plat.width &&
-          player.x + player.width > plat.x &&
-          player.y + player.height <= plat.y + 10 &&
-          player.y + player.height + player.vy >= plat.y
-        ) {
-          player.y = plat.y - player.height;
-          player.vy = 0;
-          canJump = true;
-        }
-      }
+      this.physics.add.collider(player, platforms);
+      this.physics.add.collider(player, movingPlatforms);
+      this.physics.add.collider(player, disappearingClouds, disappearCloud, null, this);
+      this.physics.add.collider(player, crates);
 
-      // Box collision and push
-      for (let box of boxes) {
-        box.vy += gravity;
-        box.y += box.vy;
+      this.physics.add.collider(crates, platforms);
+      this.physics.add.collider(crates, movingPlatforms);
 
-        for (let plat of platforms) {
-          if (
-            box.x < plat.x + plat.width &&
-            box.x + box.width > plat.x &&
-            box.y + box.height <= plat.y + 10 &&
-            box.y + box.height + box.vy >= plat.y
-          ) {
-            box.y = plat.y - box.height;
-            box.vy = 0;
-          }
-        }
+      // Mobile controls
+      document.getElementById('left').addEventListener('touchstart', () => leftPressed = true);
+      document.getElementById('left').addEventListener('touchend', () => leftPressed = false);
+      document.getElementById('right').addEventListener('touchstart', () => rightPressed = true);
+      document.getElementById('right').addEventListener('touchend', () => rightPressed = false);
+      document.getElementById('jump').addEventListener('touchstart', () => jumpPressed = true);
+      document.getElementById('jump').addEventListener('touchend', () => jumpPressed = false);
 
-        // Push interaction
-        if (
-          player.x + player.width > box.x &&
-          player.x < box.x + box.width &&
-          player.y + player.height > box.y &&
-          player.y < box.y + box.height
-        ) {
-          if (player.vx > 0) box.x += moveSpeed;
-          else if (player.vx < 0) box.x -= moveSpeed;
-        }
-      }
+      cursors = this.input.keyboard.createCursorKeys();
 
-      // Draw bunny (simple design)
-      fill("#ffc0cb"); // bunny color
-      ellipse(player.x + player.width / 2, player.y + player.height / 2, player.width, player.height);
-      fill("white");
-      ellipse(player.x + player.width / 2 - 5, player.y + player.height / 2 - 20, 10, 20);
-      ellipse(player.x + player.width / 2 + 5, player.y + player.height / 2 - 20, 10, 20);
+      // Camera follows player
+      this.cameras.main.startFollow(player);
+      this.cameras.main.setBounds(0, 0, 800, 1200);
     }
 
-    function keyPressed() {
-      keys[key] = true;
-      if ((key === "w" || keyCode === UP_ARROW) && canJump) {
-        player.vy = jumpPower;
+    function update() {
+      if (movingPlatforms.children.entries.length) {
+        movingPlatforms.children.iterate(function (platform) {
+          if (platform.x > 500) platform.body.velocity.x = -50;
+          else if (platform.x < 300) platform.body.velocity.x = 50;
+        });
+      }
+
+      player.setVelocityX(0);
+      if (cursors.left.isDown || leftPressed) {
+        player.setVelocityX(-160);
+      } else if (cursors.right.isDown || rightPressed) {
+        player.setVelocityX(160);
+      }
+
+      if ((cursors.up.isDown || jumpPressed) && player.body.touching.down) {
+        player.setVelocityY(-400);
       }
     }
 
-    function keyReleased() {
-      keys[key] = false;
+    function disappearCloud(player, cloud) {
+      cloud.disableBody(true, true);
     }
   </script>
 </body>
