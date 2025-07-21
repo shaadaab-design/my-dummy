@@ -764,62 +764,77 @@ with st.container():
 import streamlit as st
 import random
 import time
+from datetime import datetime
 
-st.set_page_config(page_title="Color Shooter Trainer", layout="centered")
+st.set_page_config(layout="wide", page_title="Hacker Terminal", page_icon="💻")
 
-# --- Initialize session state ---
-if "score" not in st.session_state:
-    st.session_state.score = 0
-if "start_time" not in st.session_state:
-    st.session_state.start_time = 0
-if "target_color" not in st.session_state:
-    st.session_state.target_color = ""
-if "colors" not in st.session_state:
-    st.session_state.colors = []
-if "message" not in st.session_state:
-    st.session_state.message = ""
+# Custom CSS for hacker terminal style
+st.markdown("""
+<style>
+body {
+    background-color: black;
+    color: #33FF33;
+    font-family: 'Courier New', Courier, monospace;
+}
+h1, h2, h3, h4, h5, h6 {
+    color: #33FF33;
+}
+.stButton>button {
+    background-color: black;
+    color: #33FF33;
+    border: 1px solid #33FF33;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# --- Helper functions ---
-def new_round():
-    st.session_state.colors = random.sample(["Red", "Blue", "Green", "Yellow"], 3)
-    st.session_state.target_color = random.choice(st.session_state.colors)
-    st.session_state.start_time = time.time()
-    st.session_state.message = ""
+# Terminal title
+st.title("💻 SPY HACKER TERMINAL v1.9.1")
 
-def check_choice(choice):
-    reaction_time = round(time.time() - st.session_state.start_time, 3)
-    if choice == st.session_state.target_color:
-        st.session_state.score += 1
-        st.session_state.message = f"✅ Correct! Reaction Time: {reaction_time}s"
-    else:
-        st.session_state.message = f"❌ Wrong! It was **{st.session_state.target_color}**"
-    new_round()
+# Start terminal simulation
+if 'start' not in st.session_state:
+    st.session_state.start = False
+if st.button("💣 INITIATE TERMINAL"):
+    st.session_state.start = True
+    st.experimental_rerun()
 
-# --- Title and score ---
-st.title("🎯 Color Reaction Aim Trainer")
-st.markdown("Quickly shoot the enemy wearing the correct color!")
+if st.session_state.start:
+    # Simulated commands
+    terminal_lines = [
+        "[ACCESS GRANTED]",
+        "Connecting to satellite relay...",
+        "Satellite uplink: ESTABLISHED",
+        "Downloading encryption key 🔑...",
+        "Key downloaded: A45-F2Z-89P-QY7",
+        "Injecting payload to enemy server...",
+        "Payload progress: ███████░░░ 73%",
+        "Trace detected ⚠️... Activating countermeasures...",
+        "Location spoofed: Greenland 🛰",
+        "Payload complete ✅",
+        "Mission Status: SUCCESS",
+    ]
 
-st.metric("Score", st.session_state.score)
+    placeholder = st.empty()
+    output = ""
+    for line in terminal_lines:
+        output += f"> {line}\n"
+        placeholder.code(output, language='bash')
+        time.sleep(random.uniform(0.3, 0.8))
 
-# --- Instructions ---
-if not st.session_state.target_color:
-    st.write("Press **Start Game** to begin.")
-else:
-    st.subheader(f"🧠 Shoot the one wearing: **{st.session_state.target_color}**")
+    # Easter egg reveal
+    st.markdown("### 🔓 Access Hidden File?")
+    if st.button("🗂 View confidential.txt"):
+        st.success("TOP SECRET INTEL:\nOperation: MIDNIGHT SHADOW\nAgent: SHAARU-016\nStatus: ACTIVE\nPriority: OMEGA")
+        st.balloons()
 
-# --- Enemy Buttons ---
-if st.session_state.colors:
-    cols = st.columns(3)
-    for i in range(3):
-        with cols[i]:
-            color = st.session_state.colors[i]
-            if st.button(f"👾 {color}", key=f"enemy_{i}"):
-                check_choice(color)
+    # Live typing interaction
+    st.markdown("### ⌨️ Enter Live Command")
+    command = st.text_input("Type your command:")
+    if command:
+        response = f"Running '{command}'...\n> SUCCESS: Task '{command.upper()}' completed at {datetime.now().strftime('%H:%M:%S')}."
+        st.code(response, language='bash')
 
-# --- Feedback ---
-if st.session_state.message:
-    st.success(st.session_state.message)
+    # Final shutdown
+    if st.button("🛑 TERMINATE TERMINAL"):
+        st.session_state.clear()
+        st.experimental_rerun()
 
-# --- Start or Restart ---
-if st.button("🎮 Start Game" if not st.session_state.target_color else "🔁 Restart"):
-    new_round()
