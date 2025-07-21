@@ -1,159 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Cloud Climber Bunny</title>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  <title>Bunny Bounce: The Floating Ruins</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
-    #game-container {
-      width: 100%;
-      height: 100vh;
-    }
-    .mobile-controls {
-      position: fixed;
+    body { margin: 0; overflow: hidden; background: #d0f4ff; }
+    #mobile-controls {
+      position: absolute;
       bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99;
-      display: flex;
-      gap: 20px;
+      left: 20px;
+      z-index: 10;
     }
-    .mobile-btn {
-      width: 60px;
-      height: 60px;
-      background: rgba(255,255,255,0.5);
-      border-radius: 50%;
-      font-size: 30px;
-      text-align: center;
-      line-height: 60px;
-      user-select: none;
+    .btn {
+      width: 60px; height: 60px; margin: 5px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 2px solid #000;
+      border-radius: 10px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div id="game-container"></div>
-  <div class="mobile-controls">
-    <div class="mobile-btn" id="left">⭠</div>
-    <div class="mobile-btn" id="right">⭢</div>
-    <div class="mobile-btn" id="jump">⭡</div>
+  <div id="mobile-controls">
+    <button class="btn" onclick="left = true" onmouseup="left = false">←</button>
+    <button class="btn" onclick="right = true" onmouseup="right = false">→</button>
+    <button class="btn" onclick="jump = true" onmouseup="jump = false">↑</button>
   </div>
 
   <script>
+    let left = false, right = false, jump = false;
+
     const config = {
       type: Phaser.AUTO,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      parent: 'game-container',
+      width: 800,
+      height: 600,
       physics: {
         default: 'arcade',
-        arcade: {
-          gravity: { y: 600 },
-          debug: false
-        }
+        arcade: { gravity: { y: 800 }, debug: false }
       },
       scene: {
-        preload,
-        create,
-        update
+        preload: preload,
+        create: create,
+        update: update
       }
     };
 
-    let player, cursors, platforms, movingPlatforms, disappearingClouds, crates, camera;
-    let leftPressed = false, rightPressed = false, jumpPressed = false;
-
     const game = new Phaser.Game(config);
+
+    let player, cursors, platforms, crates, jumpPads;
 
     function preload() {
       this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky4.png');
-      this.load.image('cloud', 'https://labs.phaser.io/assets/sprites/platform.png');
+      this.load.image('ground', 'https://labs.phaser.io/assets/platforms/platform.png');
       this.load.image('crate', 'https://labs.phaser.io/assets/sprites/crate.png');
-      this.load.image('bunny', 'https://labs.phaser.io/assets/sprites/rabbit.png');
+      this.load.image('jumpPad', 'https://labs.phaser.io/assets/sprites/mushroom16.png');
+      this.load.spritesheet('bunny', 'https://labs.phaser.io/assets/sprites/bunny.png', { frameWidth: 32, frameHeight: 32 });
     }
 
     function create() {
-      this.add.image(400, 300, 'sky').setScale(2);
+      this.add.image(400, 300, 'sky');
+
       platforms = this.physics.add.staticGroup();
-      disappearingClouds = this.physics.add.group();
-      movingPlatforms = this.physics.add.group();
-      crates = this.physics.add.group({ allowGravity: true, immovable: false });
+      platforms.create(400, 580, 'ground').setScale(2).refreshBody();
+      platforms.create(600, 450, 'ground');
+      platforms.create(50, 350, 'ground');
+      platforms.create(750, 220, 'ground');
 
-      // Create base ground
-      platforms.create(400, 590, 'cloud').setScale(2).refreshBody();
-
-      // Static clouds
-      platforms.create(300, 500, 'cloud');
-      platforms.create(600, 420, 'cloud');
-      platforms.create(100, 340, 'cloud');
-      platforms.create(400, 260, 'cloud');
-
-      // Disappearing clouds
-      disappearingClouds.create(200, 180, 'cloud');
-      disappearingClouds.create(500, 100, 'cloud');
-
-      // Moving cloud
-      const moving = movingPlatforms.create(400, 200, 'cloud');
-      moving.body.velocity.x = 50;
-      moving.setImmovable(true);
-
-      // Crate to move
-      const crate = crates.create(300, 460, 'crate');
-      crate.setCollideWorldBounds(true);
-
-      player = this.physics.add.sprite(100, 520, 'bunny');
-      player.setBounce(0.1);
+      player = this.physics.add.sprite(100, 450, 'bunny');
+      player.setBounce(0.2);
       player.setCollideWorldBounds(true);
 
-      this.physics.add.collider(player, platforms);
-      this.physics.add.collider(player, movingPlatforms);
-      this.physics.add.collider(player, disappearingClouds, disappearCloud, null, this);
-      this.physics.add.collider(player, crates);
-
-      this.physics.add.collider(crates, platforms);
-      this.physics.add.collider(crates, movingPlatforms);
-
-      // Mobile controls
-      document.getElementById('left').addEventListener('touchstart', () => leftPressed = true);
-      document.getElementById('left').addEventListener('touchend', () => leftPressed = false);
-      document.getElementById('right').addEventListener('touchstart', () => rightPressed = true);
-      document.getElementById('right').addEventListener('touchend', () => rightPressed = false);
-      document.getElementById('jump').addEventListener('touchstart', () => jumpPressed = true);
-      document.getElementById('jump').addEventListener('touchend', () => jumpPressed = false);
+      this.anims.create({
+        key: 'left', frames: this.anims.generateFrameNumbers('bunny', { start: 0, end: 1 }), frameRate: 10, repeat: -1
+      });
+      this.anims.create({
+        key: 'turn', frames: [ { key: 'bunny', frame: 0 } ], frameRate: 20
+      });
+      this.anims.create({
+        key: 'right', frames: this.anims.generateFrameNumbers('bunny', { start: 1, end: 0 }), frameRate: 10, repeat: -1
+      });
 
       cursors = this.input.keyboard.createCursorKeys();
 
-      // Camera follows player
-      this.cameras.main.startFollow(player);
-      this.cameras.main.setBounds(0, 0, 800, 1200);
+      crates = this.physics.add.group({ allowGravity: true, immovable: false });
+      crates.create(500, 500, 'crate');
+      crates.create(700, 400, 'crate');
+
+      jumpPads = this.physics.add.staticGroup();
+      jumpPads.create(150, 520, 'jumpPad');
+      jumpPads.create(750, 190, 'jumpPad');
+
+      this.physics.add.collider(player, platforms);
+      this.physics.add.collider(crates, platforms);
+      this.physics.add.collider(player, crates);
+      this.physics.add.collider(crates, crates);
+
+      this.physics.add.overlap(player, jumpPads, (player, pad) => {
+        player.setVelocityY(-500);
+      }, null, this);
     }
 
     function update() {
-      if (movingPlatforms.children.entries.length) {
-        movingPlatforms.children.iterate(function (platform) {
-          if (platform.x > 500) platform.body.velocity.x = -50;
-          else if (platform.x < 300) platform.body.velocity.x = 50;
-        });
-      }
+      const isLeft = cursors.left.isDown || left;
+      const isRight = cursors.right.isDown || right;
+      const isJump = cursors.up.isDown || jump;
 
-      player.setVelocityX(0);
-      if (cursors.left.isDown || leftPressed) {
+      if (isLeft) {
         player.setVelocityX(-160);
-      } else if (cursors.right.isDown || rightPressed) {
+        player.anims.play('left', true);
+      } else if (isRight) {
         player.setVelocityX(160);
+        player.anims.play('right', true);
+      } else {
+        player.setVelocityX(0);
+        player.anims.play('turn');
       }
 
-      if ((cursors.up.isDown || jumpPressed) && player.body.touching.down) {
-        player.setVelocityY(-400);
+      if (isJump && player.body.touching.down) {
+        player.setVelocityY(-330);
       }
-    }
-
-    function disappearCloud(player, cloud) {
-      cloud.disableBody(true, true);
     }
   </script>
 </body>
 </html>
-
