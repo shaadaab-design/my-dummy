@@ -668,8 +668,6 @@ game_html = """
 </html>
 """
 
-components.html(game_html, height=700, scrolling=True)
-
 import streamlit as st
 import random
 import time
@@ -756,4 +754,3 @@ if st.session_state.show_buttons:
 if st.session_state.reaction_time:
     st.markdown("---")
     st.metric("⏱️ Your Reaction Time", f"{st.session_state.reaction_time:.3f} sec")
-
