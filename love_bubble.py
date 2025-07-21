@@ -672,126 +672,72 @@ import streamlit as st
 import random
 import time
 
-# --- CONFIG ---
-st.set_page_config(page_title="❤️ Reaction Trainer", layout="centered")
+# Set page layout to center
+st.set_page_config(page_title="Heart Match Game", layout="centered")
 
-# --- COLOR & EMOJI SETUP ---
-color_emojis = {
+# Heart emojis as colors
+heart_colors = {
     "Red": "❤️",
     "Blue": "💙",
     "Green": "💚",
     "Yellow": "💛",
-    "Purple": "💜",
-    "Orange": "🧡"
+    "Purple": "💜"
 }
 
-# --- GAME STATE ---
-if "start_time" not in st.session_state:
-    st.session_state.start_time = None
-if "target_color" not in st.session_state:
-    st.session_state.target_color = None
-if "show_buttons" not in st.session_state:
-    st.session_state.show_buttons = False
-if "reaction_time" not in st.session_state:
-    st.session_state.reaction_time = None
-if "round_active" not in st.session_state:
-    st.session_state.round_active = False
-if "countdown_message" not in st.session_state:
-    st.session_state.countdown_message = ""
+# Session state init
+if "game_started" not in st.session_state:
+    st.session_state.game_started = False
+    st.session_state.target_color = ""
+    st.session_state.start_time = 0.0
+    st.session_state.score = 0
+    st.session_state.result = ""
 
-# --- FUNCTIONS ---
-def start_round():
-    st.session_state.reaction_time = None
-    st.session_state.round_active = False
-    st.session_state.target_color = random.choice(list(color_emojis.keys()))
-    st.session_state.show_buttons = False
-    st.session_state.countdown_message = "Get ready..."
-    placeholder = st.empty()
+# Title
+st.markdown("## ❤️ Heart Match Reaction Game")
 
-    for count in ["3...", "2...", "1..."]:
-        st.session_state.countdown_message = count
-        placeholder.markdown(f"<h2 style='text-align:center'>{st.session_state.countdown_message}</h2>", unsafe_allow_html=True)
-        time.sleep(1)
-
-    st.session_state.countdown_message = ""
-    placeholder.empty()
-    st.session_state.show_buttons = True
-    st.session_state.start_time = time.time()
-    st.session_state.round_active = True
-
-# --- STYLE ---
-st.markdown(
-    """
-    <style>
-        .game-box {
-            border: 2px solid #ccc;
-            padding: 20px;
-            border-radius: 12px;
-            max-width: 500px;
-            margin: auto;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .center {
-            text-align: center;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# --- TITLE ---
-st.markdown("<div class='center'>", unsafe_allow_html=True)
-st.title("❤️ Reaction Time Trainer")
-st.markdown("Click the matching heart **as fast as you can** after the countdown!")
-st.markdown("</div>", unsafe_allow_html=True)
-st.markdown("---")
-
-# --- GAME BOX ---
+# Main game box container
 with st.container():
-    st.markdown("<div class='game-box'>", unsafe_allow_html=True)
-
-    # Countdown message (in fixed height area)
-    if st.session_state.countdown_message:
-        st.markdown(f"<h2 class='center'>{st.session_state.countdown_message}</h2>", unsafe_allow_html=True)
-
+    st.markdown("---")
     # Start button
-    st.markdown("<div class='center'>", unsafe_allow_html=True)
-    if st.button("▶️ Start New Round"):
-        start_round()
-    st.markdown("</div>", unsafe_allow_html=True)
+    if not st.session_state.game_started:
+        if st.button("Start Game"):
+            st.session_state.game_started = True
+            st.session_state.result = ""
+            st.session_state.score = 0
+            st.experimental_rerun()
+    else:
+        # Countdown
+        countdown_placeholder = st.empty()
+        for i in range(3, 0, -1):
+            countdown_placeholder.markdown(f"### Game starts in: {i}")
+            time.sleep(1)
+        countdown_placeholder.empty()
 
-    # Show target
-    if st.session_state.target_color and st.session_state.show_buttons:
-        emoji = color_emojis[st.session_state.target_color]
-        st.markdown(f"<h3 class='center'>Target: {emoji} <b>{st.session_state.target_color}</b></h3>", unsafe_allow_html=True)
+        # Choose random target
+        st.session_state.target_color = random.choice(list(heart_colors.keys()))
+        st.session_state.start_time = time.time()
 
-    # Show buttons
-    if st.session_state.show_buttons:
-        color_list = list(color_emojis.items())
-        for i in range(0, len(color_list), 3):
-            row = st.columns(3)
-            for j in range(3):
-                if i + j < len(color_list):
-                    color, emoji = color_list[i + j]
-                    with row[j]:
-                        if st.button(f"{emoji} {color}", key=color):
-                            if st.session_state.round_active:
-                                st.session_state.round_active = False
-                                st.session_state.show_buttons = False
-                                reaction_time = time.time() - st.session_state.start_time
-                                if color == st.session_state.target_color:
-                                    st.success(f"✅ Correct! Reaction time: **{reaction_time:.3f} seconds**")
-                                else:
-                                    st.error(f"❌ Wrong! You clicked **{color}**, target was **{st.session_state.target_color}**.")
-                                st.session_state.reaction_time = reaction_time
+        st.markdown(f"### Click on: **{st.session_state.target_color}** {heart_colors[st.session_state.target_color]}")
 
-    # Show result
-    if st.session_state.reaction_time:
-        st.markdown("<hr>")
-        st.metric("⏱️ Reaction Time", f"{st.session_state.reaction_time:.3f} sec")
+        # Buttons for choices (inside columns)
+        cols = st.columns(len(heart_colors))
+        for idx, (color, emoji) in enumerate(heart_colors.items()):
+            with cols[idx]:
+                if st.button(emoji):
+                    reaction_time = time.time() - st.session_state.start_time
+                    if color == st.session_state.target_color:
+                        st.session_state.score += 1
+                        st.session_state.result = f"✅ Correct! Reaction Time: **{reaction_time:.2f}** seconds"
+                    else:
+                        st.session_state.result = f"❌ Wrong! That was {color}. Try again!"
 
-    st.markdown("</div>", unsafe_allow_html=True)
+                    st.session_state.game_started = False
+                    st.experimental_rerun()
+
+    st.markdown("---")
+    if st.session_state.result:
+        st.markdown(st.session_state.result)
+
+    st.markdown(f"### 🎯 Score: {st.session_state.score}")
+
 
