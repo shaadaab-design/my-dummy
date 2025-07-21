@@ -467,15 +467,163 @@ st.markdown("## 🐰 Bunny Platformer Game")
 components.html(html_code, height=600, scrolling=False)
 
 import streamlit as st
+import streamlit.components.v1 as components
 
-# Set page config
-st.set_page_config(layout="wide", page_title="Strawberry Cross", initial_sidebar_state="collapsed")
+st.title("🍓 Strawberry Dash Game")
 
-# Define the HTML game
-html_game = '''
-<!-- ALL YOUR FULL HTML & JAVASCRIPT CODE GOES HERE, COPY EVERYTHING I GAVE YOU EARLIER -->
-'''
+# Fullscreen toggle
+if st.button("🔲 Fullscreen"):
+    st.markdown("<script>document.documentElement.requestFullscreen()</script>", unsafe_allow_html=True)
 
-# Display it in Streamlit
-st.components.v1.html(html_game, height=700, width=1200, scrolling=False)
+game_html = """
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(to top, #ff9a9e, #fad0c4);
+  }
+
+  #game {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    font-size: 30px;
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+  }
+
+  .player {
+    position: absolute;
+    font-size: 40px;
+  }
+
+  .car {
+    position: absolute;
+    font-size: 32px;
+    color: red;
+  }
+
+  #score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    background: white;
+    padding: 5px 15px;
+    border-radius: 8px;
+    z-index: 2;
+  }
+
+  #hearts {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="score">Score: 0</div>
+  <div id="hearts">❤️❤️</div>
+  <div id="player" class="player">🍓</div>
+</div>
+
+<script>
+  const player = document.getElementById("player");
+  const game = document.getElementById("game");
+  const scoreDisplay = document.getElementById("score");
+  const heartsDisplay = document.getElementById("hearts");
+  let posX = window.innerWidth / 2 - 20;
+  let posY = window.innerHeight - 60;
+  let scrollY = 0;
+  let score = 0;
+  let lives = 2;
+  let speed = 3;
+
+  function updatePosition() {
+    player.style.left = posX + "px";
+    player.style.top = posY + "px";
+  }
+
+  function endGame() {
+    alert("Game Over! Final Score: " + score);
+    location.reload();
+  }
+
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "ArrowLeft") posX -= 40;
+    if (event.key === "ArrowRight") posX += 40;
+    if (event.key === "ArrowUp") {
+      posY -= 40;
+      scrollY += 40;
+      score += 1;
+      scoreDisplay.textContent = "Score: " + score;
+      game.style.backgroundPositionY = scrollY + "px";
+    }
+    if (event.key === "ArrowDown") posY += 40;
+    updatePosition();
+  });
+
+  function createCar() {
+    const car = document.createElement("div");
+    car.classList.add("car");
+    car.textContent = "💔";
+
+    const direction = Math.floor(Math.random() * 4);
+    if (direction === 0) { // from top
+      car.style.left = Math.random() * window.innerWidth + "px";
+      car.style.top = "-40px";
+    } else if (direction === 1) { // from bottom
+      car.style.left = Math.random() * window.innerWidth + "px";
+      car.style.top = window.innerHeight + "px";
+    } else if (direction === 2) { // from left
+      car.style.left = "-40px";
+      car.style.top = Math.random() * window.innerHeight + "px";
+    } else { // from right
+      car.style.left = window.innerWidth + "px";
+      car.style.top = Math.random() * window.innerHeight + "px";
+    }
+
+    game.appendChild(car);
+
+    let move = setInterval(() => {
+      let cx = car.offsetLeft;
+      let cy = car.offsetTop;
+
+      if (direction === 0) car.style.top = cy + speed + "px";
+      if (direction === 1) car.style.top = cy - speed + "px";
+      if (direction === 2) car.style.left = cx + speed + "px";
+      if (direction === 3) car.style.left = cx - speed + "px";
+
+      const px = player.offsetLeft;
+      const py = player.offsetTop;
+
+      if (Math.abs(px - car.offsetLeft) < 30 && Math.abs(py - car.offsetTop) < 30) {
+        lives -= 1;
+        heartsDisplay.innerText = "❤️".repeat(lives);
+        car.remove();
+        clearInterval(move);
+        if (lives <= 0) endGame();
+      }
+
+      if (cy > window.innerHeight + 50 || cy < -50 || cx > window.innerWidth + 50 || cx < -50) {
+        car.remove();
+        clearInterval(move);
+      }
+    }, 10);
+  }
+
+  setInterval(createCar, 800);
+  updatePosition();
+</script>
+</body>
+</html>
+"""
+
+components.html(game_html, height=700)
 
