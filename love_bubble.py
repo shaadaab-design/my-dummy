@@ -761,3 +761,65 @@ with st.container():
                         st.session_state.game_started = False
                         st.rerun()
 
+import streamlit as st
+import random
+import time
+
+st.set_page_config(page_title="Color Shooter Trainer", layout="centered")
+
+# --- Initialize session state ---
+if "score" not in st.session_state:
+    st.session_state.score = 0
+if "start_time" not in st.session_state:
+    st.session_state.start_time = 0
+if "target_color" not in st.session_state:
+    st.session_state.target_color = ""
+if "colors" not in st.session_state:
+    st.session_state.colors = []
+if "message" not in st.session_state:
+    st.session_state.message = ""
+
+# --- Helper functions ---
+def new_round():
+    st.session_state.colors = random.sample(["Red", "Blue", "Green", "Yellow"], 3)
+    st.session_state.target_color = random.choice(st.session_state.colors)
+    st.session_state.start_time = time.time()
+    st.session_state.message = ""
+
+def check_choice(choice):
+    reaction_time = round(time.time() - st.session_state.start_time, 3)
+    if choice == st.session_state.target_color:
+        st.session_state.score += 1
+        st.session_state.message = f"✅ Correct! Reaction Time: {reaction_time}s"
+    else:
+        st.session_state.message = f"❌ Wrong! It was **{st.session_state.target_color}**"
+    new_round()
+
+# --- Title and score ---
+st.title("🎯 Color Reaction Aim Trainer")
+st.markdown("Quickly shoot the enemy wearing the correct color!")
+
+st.metric("Score", st.session_state.score)
+
+# --- Instructions ---
+if not st.session_state.target_color:
+    st.write("Press **Start Game** to begin.")
+else:
+    st.subheader(f"🧠 Shoot the one wearing: **{st.session_state.target_color}**")
+
+# --- Enemy Buttons ---
+if st.session_state.colors:
+    cols = st.columns(3)
+    for i in range(3):
+        with cols[i]:
+            color = st.session_state.colors[i]
+            if st.button(f"👾 {color}", key=f"enemy_{i}"):
+                check_choice(color)
+
+# --- Feedback ---
+if st.session_state.message:
+    st.success(st.session_state.message)
+
+# --- Start or Restart ---
+if st.button("🎮 Start Game" if not st.session_state.target_color else "🔁 Restart"):
+    new_round()
