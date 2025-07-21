@@ -469,12 +469,121 @@ components.html(html_code, height=600, scrolling=False)
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="🌀 Maze Marble Tilt", layout="centered")
-st.markdown("## 🌀 Maze Marble Tilt")
-st.markdown("Tilt your device or use arrow keys to guide the marble through the maze!")
+st.set_page_config(page_title="🌈 Rolling Ball Escape", layout="wide")
 
-with open("maze_tilt.html", 'r', encoding='utf-8') as f:
-    html = f.read()
+st.markdown("""
+    <h1 style='text-align: center; color: #ff00aa;'>🌈 Rolling Ball Platform Escape</h1>
+    <p style='text-align: center;'>Use arrow keys or WASD to roll the ball. Some platforms vanish after one touch... Good luck 💖</p>
+""", unsafe_allow_html=True)
 
-components.html(html, height=420, scrolling=False)
+game_code = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rolling Ball Platform Escape</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(45deg, #ffc0cb, #add8e6, #90ee90, #fffacd, #dda0dd);
+      background-size: 400% 400%;
+      animation: gradient 10s ease infinite;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50% }
+      50% { background-position: 100% 50% }
+      100% { background-position: 0% 50% }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const tileSize = 60;
+    const rows = 10;
+    const cols = 12;
+
+    let platforms = [];
+    let touchedTiles = {};
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (Math.random() > 0.3) {
+          platforms.push({ x, y });
+        }
+      }
+    }
+
+    const player = {
+      x: 1,
+      y: 1,
+      color: '#ff69b4',
+      radius: tileSize / 3,
+    };
+
+    document.addEventListener('keydown', (e) => {
+      let nx = player.x;
+      let ny = player.y;
+
+      if (e.key === 'ArrowUp' || e.key === 'w') ny--;
+      if (e.key === 'ArrowDown' || e.key === 's') ny++;
+      if (e.key === 'ArrowLeft' || e.key === 'a') nx--;
+      if (e.key === 'ArrowRight' || e.key === 'd') nx++;
+
+      if (isValidMove(nx, ny)) {
+        const key = nx + ',' + ny;
+        if (!touchedTiles[key]) {
+          touchedTiles[key] = 1;
+        } else {
+          // If touched once already, remove the tile
+          platforms = platforms.filter(p => !(p.x === nx && p.y === ny));
+        }
+        player.x = nx;
+        player.y = ny;
+      }
+    });
+
+    function isValidMove(x, y) {
+      return platforms.some(p => p.x === x && p.y === y);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      platforms.forEach(p => {
+        const rainbow = ['#ff69b4', '#ff4500', '#ffff00', '#00ff00', '#00ced1', '#1e90ff', '#9400d3'];
+        const color = rainbow[(p.x + p.y) % rainbow.length];
+        ctx.fillStyle = color;
+        ctx.fillRect(p.x * tileSize, p.y * tileSize, tileSize, tileSize);
+      });
+
+      ctx.beginPath();
+      ctx.arc(player.x * tileSize + tileSize / 2, player.y * tileSize + tileSize / 2, player.radius, 0, Math.PI * 2);
+      ctx.fillStyle = player.color;
+      ctx.fill();
+      ctx.closePath();
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>
+"""
+
+components.html(game_code, height=700)
 
