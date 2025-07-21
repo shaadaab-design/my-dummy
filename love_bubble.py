@@ -587,3 +587,78 @@ game_code = """
 
 components.html(game_code, height=700)
 
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(page_title="Catch the Rainbow 🌈", layout="wide")
+
+st.title("🌈 Catch the Rainbow!")
+st.markdown("Click the rainbows before they fall! 🖱️")
+
+game_code = """
+<html>
+  <body style="margin:0; overflow:hidden;">
+    <canvas id="gameCanvas" width="800" height="500" style="border:1px solid #ccc;"></canvas>
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      let rainbow = { x: Math.random() * 750, y: 0, size: 50 };
+      let score = 0;
+
+      function drawRainbow() {
+        const gradient = ctx.createLinearGradient(0, 0, rainbow.size, 0);
+        gradient.addColorStop(0, "red");
+        gradient.addColorStop(0.2, "orange");
+        gradient.addColorStop(0.4, "yellow");
+        gradient.addColorStop(0.6, "green");
+        gradient.addColorStop(0.8, "blue");
+        gradient.addColorStop(1, "violet");
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(rainbow.x, rainbow.y, rainbow.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawScore() {
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.fillText("Score: " + score, 10, 30);
+      }
+
+      function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRainbow();
+        drawScore();
+        rainbow.y += 2;
+
+        if (rainbow.y > canvas.height) {
+          rainbow.x = Math.random() * 750;
+          rainbow.y = 0;
+        }
+
+        requestAnimationFrame(update);
+      }
+
+      canvas.addEventListener("click", function (e) {
+        const dx = e.offsetX - rainbow.x;
+        const dy = e.offsetY - rainbow.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < rainbow.size / 2) {
+          score++;
+          rainbow.x = Math.random() * 750;
+          rainbow.y = 0;
+        }
+      });
+
+      update();
+    </script>
+  </body>
+</html>
+"""
+
+# Embed it in the Streamlit page
+components.html(game_code, height=520)
+
