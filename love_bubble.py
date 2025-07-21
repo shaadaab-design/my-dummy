@@ -469,133 +469,150 @@ components.html(html_code, height=600, scrolling=False)
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Rainbow Road Hop", layout="centered")
-st.markdown("## 🌈 Rainbow Road Hop")
-st.markdown("Use arrow keys (or buttons) to move. Dodge the hearts. Push forward!")
-
 game_html = """
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Rainbow Road Hop</title>
-  <style>
-    body { margin:0; overflow:hidden; }
-    canvas { display:block; background:#111; margin:auto; }
-    #controls {
-      position: fixed;
-      bottom: 10px;
-      width: 100%;
-      text-align: center;
-      z-index: 999;
-    }
-    .btn {
-      padding: 10px 15px;
-      margin:0 5px;
-      font-size: 24px;
-      border:none;
-      border-radius: 5px;
-      background: #ff69b4;
-      color:#fff;
-      user-select:none;
-    }
-  </style>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(to top, #ff9a9e, #fad0c4, #fad0c4);
+  }
+
+  #game {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    font-size: 30px;
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+  }
+
+  .player {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+  }
+
+  .car {
+    position: absolute;
+    font-size: 32px;
+    color: red;
+  }
+
+  #score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    background: white;
+    padding: 5px 15px;
+    border-radius: 8px;
+    z-index: 2;
+  }
+
+  #hearts {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    z-index: 2;
+  }
+</style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  <div id="controls">
-    <button class="btn" onclick="move(-1,0)">◀️</button>
-    <button class="btn" onclick="move(0,1)">🔼</button>
-    <button class="btn" onclick="move(1,0)">▶️</button>
-  </div>
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const cols = 7, rows = 10;
-    let tileW, tileH;
+<div id="game">
+  <div id="score">Score: 0</div>
+  <div id="hearts">❤️❤️</div>
+  <div id="player" class="player">🍓</div>
+</div>
 
-    const player = { x: 3, y: rows - 1, r: 0.35, color: "#00ffcc" };
-    let hearts = [];
-    let frame = 0;
+<script>
+  const player = document.getElementById("player");
+  const game = document.getElementById("game");
+  const scoreDisplay = document.getElementById("score");
+  const heartsDisplay = document.getElementById("hearts");
+  let posX = window.innerWidth / 2 - 20;
+  let posY = window.innerHeight - 60;
+  let score = 0;
+  let lives = 2;
+  let speed = 3;
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      tileW = canvas.width / cols;
-      tileH = window.innerHeight * 0.8 / rows;
-      canvas.height = tileH * rows;
+  function updatePosition() {
+    player.style.left = posX + "px";
+    player.style.top = posY + "px";
+  }
+
+  function endGame() {
+    alert("Game Over! Final Score: " + score);
+    location.reload();
+  }
+
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "ArrowLeft") posX -= 40;
+    if (event.key === "ArrowRight") posX += 40;
+    if (event.key === "ArrowUp") {
+      posY -= 40;
+      score += 1;
+      scoreDisplay.textContent = "Score: " + score;
     }
-    window.addEventListener("resize", resize);
-    resize();
+    if (event.key === "ArrowDown") posY += 40;
+    updatePosition();
+  });
 
-    function spawnHearts() {
-      hearts = hearts.filter(h => h.y < rows);
-      if (frame % 40 === 0) {
-        const row = Math.floor(Math.random() * (rows - 2)) + 1;
-        const dir = Math.random() < 0.5 ? -1 : 1;
-        const startX = dir < 0 ? cols : -1;
-        hearts.push({ x: startX, y: row, dir, speed: 0.05 + Math.random() * 0.1 });
+  function createCar() {
+    const car = document.createElement("div");
+    car.classList.add("car");
+    car.textContent = "💔";
+
+    const fromLeft = Math.random() > 0.5;
+
+    if (fromLeft) {
+      car.style.left = "0px";
+    } else {
+      car.style.left = window.innerWidth + "px";
+    }
+
+    car.style.top = Math.floor(Math.random() * window.innerHeight) + "px";
+
+    game.appendChild(car);
+
+    let move = setInterval(() => {
+      let carX = car.offsetLeft;
+      car.style.left = (fromLeft ? carX + speed : carX - speed) + "px";
+
+      const px = player.offsetLeft;
+      const py = player.offsetTop;
+      const cx = car.offsetLeft;
+      const cy = car.offsetTop;
+
+      if (
+        Math.abs(px - cx) < 30 &&
+        Math.abs(py - cy) < 30
+      ) {
+        lives -= 1;
+        heartsDisplay.innerText = "❤️".repeat(lives);
+        car.remove();
+        clearInterval(move);
+        if (lives <= 0) endGame();
       }
-    }
 
-    function draw() {
-      ctx.fillStyle = "#111"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      for (let y = 0; y < rows; y++) {
-        ctx.fillStyle = `hsl(${y/rows*360}, 70%, 30%)`;
-        ctx.fillRect(0, y * tileH, canvas.width, tileH - 2);
+      if (cx < -50 || cx > window.innerWidth + 50) {
+        car.remove();
+        clearInterval(move);
       }
-      hearts.forEach(h => {
-        ctx.fillStyle = "#ff69b4";
-        ctx.beginPath();
-        ctx.arc((h.x + 0.5) * tileW, (h.y + 0.5) * tileH, Math.min(tileW, tileH) * 0.4, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      ctx.fillStyle = player.color;
-      ctx.beginPath();
-      ctx.arc((player.x + 0.5) * tileW, (player.y + 0.5) * tileH, Math.min(tileW, tileH) * player.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    }, 10);
+  }
 
-    function update() {
-      frame++;
-      spawnHearts();
-      hearts.forEach(h => h.x += h.dir * h.speed);
-      if (playerMoved) playerMoved = false;
-      hearts.forEach(h => {
-        if (h.y === player.y && Math.abs(h.x - player.x) < 0.8) endGame();
-      });
-      draw();
-      if (!gameOver) requestAnimationFrame(update);
-    }
-
-    let gameOver = false, playerMoved = false;
-    function move(dx, dy) {
-      if (gameOver) return;
-      player.x = Math.min(cols-1, Math.max(0, player.x + dx));
-      player.y = Math.min(rows-1, Math.max(0, player.y - dy));
-      playerMoved = true;
-      if (player.y === 0) endGame(true);
-    }
-
-    document.addEventListener("keydown", e => {
-      if (e.key === "ArrowLeft") move(-1,0);
-      if (e.key === "ArrowRight") move(1,0);
-      if (e.key === "ArrowUp") move(0,1);
-    });
-
-    function endGame(win) {
-      gameOver = true;
-      setTimeout(() => {
-        alert(win ? "YOU REACHED THE RAINBOW!!! 🌈" : "💔 Hit by a heart!");
-        document.location.reload();
-      }, 50);
-    }
-
-    update();
-  </script>
+  setInterval(createCar, 800);
+  updatePosition();
+</script>
 </body>
 </html>
 """
 
-components.html(game_html, height=window.innerHeight if False else 800, scrolling=False)
+components.html(game_html, height=700)
 
